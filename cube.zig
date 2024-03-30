@@ -115,16 +115,17 @@ const Cube = struct {
         var colors = cornerColorMapping[cubie.index];
 
         switch (cubie.orientation) {
+            // Nothing todo
             0 => {},
+            // Rotate clockwise
             1 => {
-                // Rotate clockwise
                 const tmp = colors[0];
                 colors[0] = colors[1];
                 colors[1] = colors[2];
                 colors[2] = tmp;
             },
+            // Rotate counter clockwise
             2 => {
-                // Rotate counter clockwise
                 const tmp = colors[2];
                 colors[2] = colors[1];
                 colors[1] = colors[0];
@@ -156,8 +157,70 @@ const Cube = struct {
             faces[48 + i] = C[i];
         }
 
-        // precompute per row
-        print("{s}", .{faces});
+        // 2d mapping of the cube, 54 faces
+        //
+        //           R R R
+        //           R R R
+        //           R R R
+        //
+        //    B B B  W W W  G G G  Y Y Y
+        //    B B B  W W W  G G G  Y Y Y
+        //    B B B  W W W  G G G  Y Y Y
+        //
+        //           O O O
+        //           O O O
+        //           O O O
+        //
+        const map = [54]Cubie{
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+            Cubie{ .index = 0, .orientation = 0 },
+        };
+
+        for (map) |c| {
+            print("{}\n", .{c});
+        }
     }
 };
 
@@ -168,5 +231,4 @@ const Cube = struct {
 pub fn main() void {
     var cube = Cube.init();
     cube.str();
-    print("\n", .{});
 }
