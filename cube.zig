@@ -11,14 +11,16 @@
 //!
 //!                   R R R
 //!                   R R R
-//!                   R R R 
-//!             B B B W W W G G G Y Y Y
-//!       Left  B B B W W W G G G Y Y Y  Back
-//!             B B B W W W G G G Y Y Y
+//!                   R R R
+//!
+//!            B B B  W W W  G G G  Y Y Y
+//!      Left  B B B  W W W  G G G  Y Y Y  Back
+//!            B B B  W W W  G G G  Y Y Y
+//!
 //!                   O O O
 //!                   O O O
 //!                   O O O
-//!                     
+//!
 //!                   Down
 //!
 //! Edge indices (12):
@@ -37,96 +39,134 @@
 //! U=Up, B=Back, L=Left, R=Right, F=Front, D=Down
 //! R=Red, G=Green, B=Blue, W=White, Y=Yellow, O=Orange
 
+const print = @import("std").debug.print;
+const swap = @import("std").mem.swap;
 
-const Edge = enum(i8) { UB, UR, UF, UL, FR, FL, BL, BR, DF, DL, DB, DR };
-const Corner = enum(i8) { ULB, URB, URF, ULF, DLF, DLB, DRB, DRF };
-const Color = enum(i8) { RED, GREEN, BLUE, WHITE, ORANGE, YELLOW };
+const Edge = enum(usize) { UB, UR, UF, UL, FR, FL, BL, BR, DF, DL, DB, DR };
+const Corner = enum(usize) { ULB, URB, URF, ULF, DLF, DLB, DRB, DRF };
+const Color = enum(usize) { RED, GREEN, BLUE, WHITE, ORANGE, YELLOW };
+
 const Cubie = struct {
-    index: i8,
-    orientation: i8,
+    index: usize,
+    orientation: usize,
 };
 
 const Cube = struct {
     edge: [12]Cubie,
     corner: [8]Cubie,
+
+    pub fn init() Cube {
+        var cube: Cube = undefined;
+
+        for (&cube.edge, 0..) |*edge, i| {
+            edge.index = i;
+            edge.orientation = 0;
+        }
+
+        for (&cube.corner, 0..) |*corner, i| {
+            corner.index = i;
+            corner.orientation = 0;
+        }
+
+        return cube;
+    }
+
+    pub fn edgeColors(self: Cube, edge: Edge) [2]Color {
+        const cubie: Cubie = self.edge[@intFromEnum(edge)];
+
+        const edgeColorMapping = [12][2]Color{
+            [2]Color{ Color.RED, Color.YELLOW },
+            [2]Color{ Color.RED, Color.GREEN },
+            [2]Color{ Color.RED, Color.WHITE },
+            [2]Color{ Color.RED, Color.BLUE },
+            [2]Color{ Color.WHITE, Color.GREEN },
+            [2]Color{ Color.WHITE, Color.BLUE },
+            [2]Color{ Color.YELLOW, Color.BLUE },
+            [2]Color{ Color.YELLOW, Color.GREEN },
+            [2]Color{ Color.ORANGE, Color.WHITE },
+            [2]Color{ Color.ORANGE, Color.BLUE },
+            [2]Color{ Color.ORANGE, Color.YELLOW },
+            [2]Color{ Color.ORANGE, Color.GREEN },
+        };
+
+        var colors = edgeColorMapping[cubie.index];
+
+        if (cubie.orientation == 1) {
+            swap(Color, &colors[0], &colors[1]);
+        }
+
+        return colors;
+    }
+
+    pub fn cornerColors(self: Cube, corner: Corner) [3]Color {
+        const cubie: Cubie = self.corner[@intFromEnum(corner)];
+
+        const cornerColorMapping = [8][3]Color{
+            [3]Color{ Color.RED, Color.BLUE, Color.YELLOW },
+            [3]Color{ Color.RED, Color.GREEN, Color.YELLOW },
+            [3]Color{ Color.RED, Color.GREEN, Color.WHITE },
+            [3]Color{ Color.RED, Color.BLUE, Color.WHITE },
+            [3]Color{ Color.ORANGE, Color.BLUE, Color.WHITE },
+            [3]Color{ Color.ORANGE, Color.BLUE, Color.YELLOW },
+            [3]Color{ Color.ORANGE, Color.GREEN, Color.YELLOW },
+            [3]Color{ Color.ORANGE, Color.GREEN, Color.WHITE },
+        };
+
+        var colors = cornerColorMapping[cubie.index];
+
+        switch (cubie.orientation) {
+            0 => {},
+            1 => {
+                // Rotate clockwise
+                const tmp = colors[0];
+                colors[0] = colors[1];
+                colors[1] = colors[2];
+                colors[2] = tmp;
+            },
+            2 => {
+                // Rotate counter clockwise
+                const tmp = colors[2];
+                colors[2] = colors[1];
+                colors[1] = colors[0];
+                colors[0] = tmp;
+            },
+            else => print("Invalid orientation {}", .{cubie.orientation}),
+        }
+        return colors;
+    }
+
+    pub fn str(self: Cube) void {
+        const C = [_]u8{ 'R', 'G', 'B', 'W', 'O', 'Y' };
+        var faces: [54]u8 = undefined;
+
+        for (0..12) |i| {
+            const colors = self.edgeColors(@enumFromInt(i));
+            faces[i * 2 + 0] = C[@intFromEnum(colors[0])];
+            faces[i * 2 + 1] = C[@intFromEnum(colors[1])];
+        }
+
+        for (0..8) |i| {
+            const colors = self.cornerColors(@enumFromInt(i));
+            faces[24 + i * 3 + 0] = C[@intFromEnum(colors[0])];
+            faces[24 + i * 3 + 1] = C[@intFromEnum(colors[1])];
+            faces[24 + i * 3 + 2] = C[@intFromEnum(colors[2])];
+        }
+
+        for (0..6) |i| {
+            faces[48 + i] = C[i];
+        }
+
+        // precompute per row
+        print("{s}", .{faces});
+    }
 };
 
-const print = @import("std").debug.print;
-const swap = @import("std").mem.swap;
-
-pub fn init() Cube {
-    var cube: Cube = undefined;
-
-    for (&cube.edge, 0..) |*edge, i| {
-        edge.index = @as(i8, @intCast(i));
-        edge.orientation = 0;
-    }
-
-    for (&cube.corner, 0..) |*corner, i| {
-        corner.index = @as(i8, @intCast(i));
-        corner.orientation = 0;
-    }
-
-    return cube;
-}
-
-pub fn edgeColors(cube: Cube, edge: Edge) struct { Color, Color } {
-    const cubie: Cubie = cube.edge[@as(usize, @intCast(@intFromEnum(edge)))];
-
-    const index: Edge = @enumFromInt(cubie.index);
-    var colors = switch (index) {
-        Edge.UB => .{ Color.RED, Color.YELLOW },
-        Edge.UR => .{ Color.RED, Color.GREEN },
-        Edge.UF => .{ Color.RED, Color.WHITE },
-        Edge.UL => .{ Color.RED, Color.BLUE },
-        Edge.FR => .{ Color.WHITE, Color.GREEN },
-        Edge.FL => .{ Color.WHITE, Color.BLUE },
-        Edge.BL => .{ Color.YELLOW, Color.BLUE },
-        Edge.BR => .{ Color.YELLOW, Color.GREEN },
-        Edge.DF => .{ Color.ORANGE, Color.WHITE },
-        Edge.DL => .{ Color.ORANGE, Color.BLUE },
-        Edge.DB => .{ Color.ORANGE, Color.YELLOW },
-        Edge.DR => .{ Color.ORANGE, Color.GREEN },
-    };
-
-    if (cubie.orientation == 1) {
-        swap(Color, &colors[0], &colors[1]);
-    }
-
-    return colors;
-}
-
-pub fn cornerColors(cube: Cube, corner: Corner) struct { Color, Color, Color } {
-    const cubie: Cubie = cube.corner[@as(usize, @intCast(@intFromEnum(corner)))];
-
-    var color: struct { Color, Color, Color } = undefined;
-
-
-    const index: Corner = @enumFromInt(corner.index);
-    switch (index) {
-    }
-
-    return color;
-}
-
-
-pub fn f(cube: Cube) Cube {
-    var tmp: Cubie = cube.corner[Corner.ULF];
-    cube.corner[Corner.ULF] = cube.corner[Corner.DLF];
-    cube.corner[Corner.URF] = tmp;
-    return cube;
-}
-
-pub fn render(cube: Cube) void {
-    // gather top
-    print("{}", .{cube.corner[0].index});
-    const c = edgeColors(cube, Edge.DR);
-    print("{} {}", .{ c[0], c[1] });
-    // gather left, front, right, back
-    // gather bottom
-}
+// Rotate front clockwise
+//pub fn f(cube: *Cube) void {
+//}
 
 pub fn main() void {
-    var cube = init();
-    render(cube);
+    var cube = Cube.init();
+    cube.str();
+    print("\n", .{});
 }
