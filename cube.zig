@@ -136,7 +136,7 @@ const Cube = struct {
         return colors;
     }
 
-    pub fn str(self: Cube) void {
+    pub fn render(self: Cube) void {
         const C = [_]u8{ 'R', 'G', 'B', 'W', 'O', 'Y' };
         var faces: [54]u8 = undefined;
 
@@ -157,78 +157,40 @@ const Cube = struct {
             faces[48 + i] = C[i];
         }
 
-        // 2d mapping of the cube, 54 faces
-        //
-        //           R R R
-        //           R R R
-        //           R R R
-        //
-        //    B B B  W W W  G G G  Y Y Y
-        //    B B B  W W W  G G G  Y Y Y
-        //    B B B  W W W  G G G  Y Y Y
-        //
-        //           O O O
-        //           O O O
-        //           O O O
-        //
-        const map = [54]Cubie{
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-            Cubie{ .index = 0, .orientation = 0 },
-        };
+        // 2d mapping of the cube, 54 faces, see map.py
+        const map = [54]usize{ 24, 0, 27, 6, 48, 2, 33, 4, 30, 25, 7, 34, 35, 5, 32, 31, 3, 28, 29, 1, 26, 13, 50, 11, 10, 51, 8, 9, 49, 15, 14, 53, 12, 40, 19, 37, 38, 17, 47, 46, 23, 43, 44, 21, 41, 36, 16, 45, 18, 52, 22, 39, 20, 42 };
 
-        for (map) |c| {
-            print("{}\n", .{c});
+        for (0..3) |i| {
+            print("        ", .{});
+            for (0..3) |j| {
+                print("{c} ", .{faces[map[i * 3 + j]]});
+            }
+            print("\n", .{});
+        }
+        print("\n", .{});
+        for (0..3) |i| {
+            print(" ", .{});
+            for (0..12) |j| {
+                if (j % 3 == 0 and j > 0) {
+                    print(" {c} ", .{faces[map[9 + i * 12 + j]]});
+                } else {
+                    print("{c} ", .{faces[map[9 + i * 12 + j]]});
+                }
+            }
+            print("\n", .{});
+        }
+        print("\n", .{});
+        for (0..3) |i| {
+            print("        ", .{});
+            for (0..3) |j| {
+                print("{c} ", .{faces[map[9 + 3 * 12 + i * 3 + j]]});
+            }
+            print("\n", .{});
         }
     }
 };
 
-// Rotate front clockwise
-//pub fn f(cube: *Cube) void {
-//}
-
 pub fn main() void {
     var cube = Cube.init();
-    cube.str();
+    cube.render();
 }
