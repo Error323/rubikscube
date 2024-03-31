@@ -35,6 +35,16 @@
 //!     0   1   2   3   4   5   6   7
 //! pos ULB URB URF ULF DLF DLB DRB DRF
 //! ori RBY RGY RGW RBW OBW OBY OGY OGW
+//! 3d  YXZ YXZ YXZ YXZ YXZ YXZ YXZ YXZ
+//!
+//! Orientations (3):
+//!
+//!           YXZ DLF
+//! Rz(YXZ) = XYZ LDF
+//! Ry(XYZ) = ZYX FDL
+//! Rx(ZYX) = YZX DFL
+//! Rz(YZX) = XZY LFD
+//! Ry(XZY) = ZXY FLD
 //!
 //! U=Up, B=Back, L=Left, R=Right, F=Front, D=Down
 //! R=Red, G=Green, B=Blue, W=White, Y=Yellow, O=Orange
@@ -42,8 +52,37 @@
 const print = @import("std").debug.print;
 const swap = @import("std").mem.swap;
 
-const Edge = enum(usize) { UB, UR, UF, UL, FR, FL, BL, BR, DF, DL, DB, DR };
-const Corner = enum(usize) { ULB, URB, URF, ULF, DLF, DLB, DRB, DRF };
+const Edge = enum(usize) {
+    UB,
+    UR,
+    UF,
+    UL,
+    FR,
+    FL,
+    BL,
+    BR,
+    DF,
+    DL,
+    DB,
+    DR,
+    fn id(self: Edge) usize {
+        return @intFromEnum(self);
+    }
+};
+
+const Corner = enum(usize) {
+    ULB,
+    URB,
+    URF,
+    ULF,
+    DLF,
+    DLB,
+    DRB,
+    DRF,
+    fn id(self: Corner) usize {
+        return @intFromEnum(self);
+    }
+};
 const Color = enum(usize) { RED, GREEN, BLUE, WHITE, ORANGE, YELLOW };
 
 const Cubie = struct {
@@ -69,6 +108,37 @@ const Cube = struct {
         }
 
         return cube;
+    }
+
+    /// Rotate the front face clockwise 90 degrees
+    pub fn f(self: *Cube) void {
+        var tmp: Cubie = undefined;
+
+        tmp = self.corner[Corner.ULF.id()];
+        self.corner[Corner.ULF.id()] = self.corner[Corner.DLF.id()];
+        self.corner[Corner.DLF.id()] = self.corner[Corner.DRF.id()];
+        self.corner[Corner.DRF.id()] = self.corner[Corner.URF.id()];
+        self.corner[Corner.URF.id()] = tmp;
+
+        self.corner[Corner.ULF.id()].orientation += 2;
+        self.corner[Corner.ULF.id()].orientation %= 3;
+        self.corner[Corner.URF.id()].orientation += 1;
+        self.corner[Corner.URF.id()].orientation %= 3;
+        self.corner[Corner.DRF.id()].orientation += 2;
+        self.corner[Corner.DRF.id()].orientation %= 3;
+        self.corner[Corner.DLF.id()].orientation += 1;
+        self.corner[Corner.DLF.id()].orientation %= 3;
+
+        tmp = self.edge[Edge.UF.id()];
+        self.edge[Edge.UF.id()] = self.edge[Edge.FL.id()];
+        self.edge[Edge.FL.id()] = self.edge[Edge.DF.id()];
+        self.edge[Edge.DF.id()] = self.edge[Edge.FR.id()];
+        self.edge[Edge.FR.id()] = tmp;
+
+        self.edge[Edge.UF.id()].orientation ^= 1;
+        self.edge[Edge.FL.id()].orientation ^= 1;
+        self.edge[Edge.DF.id()].orientation ^= 1;
+        self.edge[Edge.FR.id()].orientation ^= 1;
     }
 
     pub fn edgeColors(self: Cube, edge: Edge) [2]Color {
@@ -99,7 +169,29 @@ const Cube = struct {
     }
 
     pub fn cornerColors(self: Cube, corner: Corner) [3]Color {
-        const cubie: Cubie = self.corner[@intFromEnum(corner)];
+        const cubie: Cubie = self.corner[corner.id()];
+
+        var o0: usize = 0;
+        var o1: usize = 1;
+        var o2: usize = 2;
+
+        if (cubie.orientation == 0) {
+            if ((cubie.index + corner.id()) % 2 == 1) {
+                swap(usize, &o1, &o2);
+            }
+        }
+        if (cubie.orientation == 1) {
+            if ((cubie.index + corner.id()) % 2 == 1) {
+                swap(usize, &o0, &o1);
+            }
+        } else if (cubie.orientation == 2) {
+            o0 = 2;
+            o1 = 0;
+            o2 = 1;
+            if ((cubie.index + corner.id()) % 2 == 1) {
+                swap(usize, &o0, &o2);
+            }
+        }
 
         const cornerColorMapping = [8][3]Color{
             [3]Color{ Color.RED, Color.BLUE, Color.YELLOW },
@@ -114,26 +206,7 @@ const Cube = struct {
 
         var colors = cornerColorMapping[cubie.index];
 
-        switch (cubie.orientation) {
-            // Nothing todo
-            0 => {},
-            // Rotate clockwise
-            1 => {
-                const tmp = colors[0];
-                colors[0] = colors[1];
-                colors[1] = colors[2];
-                colors[2] = tmp;
-            },
-            // Rotate counter clockwise
-            2 => {
-                const tmp = colors[2];
-                colors[2] = colors[1];
-                colors[1] = colors[0];
-                colors[0] = tmp;
-            },
-            else => print("Invalid orientation {}", .{cubie.orientation}),
-        }
-        return colors;
+        return [3]Color{ colors[o0], colors[o1], colors[o2] };
     }
 
     pub fn render(self: Cube) void {
@@ -160,6 +233,7 @@ const Cube = struct {
         // 2d mapping of the cube, 54 faces, see map.py
         const map = [54]usize{ 24, 0, 27, 6, 48, 2, 33, 4, 30, 25, 7, 34, 35, 5, 32, 31, 3, 28, 29, 1, 26, 13, 50, 11, 10, 51, 8, 9, 49, 15, 14, 53, 12, 40, 19, 37, 38, 17, 47, 46, 23, 43, 44, 21, 41, 36, 16, 45, 18, 52, 22, 39, 20, 42 };
 
+        print("\n", .{});
         for (0..3) |i| {
             print("        ", .{});
             for (0..3) |j| {
@@ -187,10 +261,14 @@ const Cube = struct {
             }
             print("\n", .{});
         }
+        print("\n", .{});
     }
 };
 
 pub fn main() void {
     var cube = Cube.init();
-    cube.render();
+    for (0..4) |_| {
+        cube.f();
+        cube.render();
+    }
 }
