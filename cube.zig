@@ -28,14 +28,14 @@
 //!
 //!       0  1  2  3  4  5  6  7  8  9  10 11
 //! pos   UB UR UF UL FR FL BL BR DF DL DB DR
-//! color RY RG RW RB WG WB YB YG OW OB OY OG
+//! color YR YB YO YG OB OG RG RB WO WG WR WB
 //!
 //!
 //! Corner indices (8):
 //!
 //!       0   1   2   3   4   5   6   7
 //! pos   ULB URB URF ULF DLF DLB DRB DRF
-//! color RBY RGY RGW RBW OBW OBY OGY OGW
+//! color YGR YBR YBO YGO WGO WGR WBR WBO
 //! world YXZ YXZ YXZ YXZ YXZ YXZ YXZ YXZ
 //!
 //! U=Up, B=Back, L=Left, R=Right, F=Front, D=Down
@@ -78,7 +78,20 @@ const ORANGE: usize = 4;
 const YELLOW: usize = 5;
 
 /// color orientations, see corner.py
-const CO = [2][3][2][3]usize{ [3][2][3]usize{ [2][3]usize{ [_]usize{ 0, 1, 2 }, [_]usize{ 0, 2, 1 } }, [2][3]usize{ [_]usize{ 1, 2, 0 }, [_]usize{ 1, 0, 2 } }, [2][3]usize{ [_]usize{ 2, 0, 1 }, [_]usize{ 2, 1, 0 } } }, [3][2][3]usize{ [2][3]usize{ [3]usize{ 0, 1, 2 }, [_]usize{ 0, 2, 1 } }, [2][3]usize{ [3]usize{ 2, 0, 1 }, [3]usize{ 2, 1, 0 } }, [2][3]usize{ [3]usize{ 1, 2, 0 }, [3]usize{ 1, 0, 2 } } } };
+// zig fmt: off
+const CO = [2][3][2][3]usize{ 
+    [3][2][3]usize{ 
+        [2][3]usize{ [_]usize{ 0, 1, 2 }, [_]usize{ 0, 2, 1 } }, 
+        [2][3]usize{ [_]usize{ 1, 2, 0 }, [_]usize{ 1, 0, 2 } }, 
+        [2][3]usize{ [_]usize{ 2, 0, 1 }, [_]usize{ 2, 1, 0 } } 
+    }, 
+    [3][2][3]usize{ 
+        [2][3]usize{ [3]usize{ 0, 1, 2 }, [_]usize{ 0, 2, 1 } }, 
+        [2][3]usize{ [3]usize{ 2, 0, 1 }, [3]usize{ 2, 1, 0 } }, 
+        [2][3]usize{ [3]usize{ 1, 2, 0 }, [3]usize{ 1, 0, 2 } } 
+    } 
+};
+// zig fmt: on
 
 const Cubie = packed struct {
     index: u4,
@@ -289,7 +302,21 @@ const Cube = struct {
         }
 
         // 2d mapping of the cube, 54 faces, see map.py
-        const map = [54]usize{ 24, 0, 27, 6, 53, 2, 33, 4, 30, 25, 7, 34, 35, 5, 32, 31, 3, 28, 29, 1, 26, 13, 49, 11, 10, 52, 8, 9, 50, 15, 14, 48, 12, 40, 19, 37, 38, 17, 47, 46, 23, 43, 44, 21, 41, 36, 16, 45, 18, 51, 22, 39, 20, 42 };
+        // zig fmt: off
+        const map = [54]usize{ 
+                         24,  0, 27, 
+                          6, 53,  2, 
+                         33,  4, 30, 
+
+            25,  7, 34,  35,  5, 32,  31,  3, 28,  29,  1, 26, 
+            13, 49, 11,  10, 52,  8,   9, 50, 15,  14, 48, 12, 
+            40, 19, 37,  38, 17, 47,  46, 23, 43,  44, 21, 41, 
+
+                         36, 16, 45,
+                         18, 51, 22, 
+                         39, 20, 42 
+        };
+        // zig fmt: on
 
         print("\n", .{});
         for (0..3) |i| {
