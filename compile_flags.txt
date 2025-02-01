@@ -1,0 +1,6 @@
+-WCL4
+-Werror
+-Wno-unused-function
+-std=c++17
+-mno-stack-arg-probe
+-march=x86-64-v3
