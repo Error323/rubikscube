@@ -3,11 +3,13 @@
 #include <cassert>
 #include <csignal>
 #include <cstdio>
+#include <ctime>
 #include <vector>
 
 // clang-format off
 #include "defines.hpp"
 #include "model.cpp"
+#include "search.cpp"
 // clang-format on
 
 void* Allocate(u64 size) {
@@ -24,12 +26,15 @@ void Deallocate(void *addr, u64 size) {
 }
 
 s32 main(void) {
-    Cube cube1, cube2, cube3;
-    Init(cube1);
-    Init(cube3);
-    printf("%lu %lu\n", cube1.corners, cube1.edges);
-    printf("sizeof(Cube) = %lu\n", sizeof(Cube));
-    assert(!(cube1 == cube2));
-    assert(cube1 == cube3);
+    srand((u32)time(NULL));
+    Cube cube;
+    Init(cube);
+    for (int i = 0; i < 20; i++) {
+        u32 r = rand() % 18;
+        printf("%s ", kNames[r]);
+        kMoves[r](cube);
+    }
+    printf("\n");
+    PrettyPrint(cube);
     return 0;
 }
