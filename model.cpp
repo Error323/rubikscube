@@ -294,15 +294,12 @@ internal void EdgeColor(Cube &c, Edge edge, s32 colors[2]) {
 }
 
 internal void PrettyPrint(Cube &c) {
-    //static const char colors[] = {'R', 'G', 'B', 'W', 'O', 'Y'};
-    static const char* colors[] = {
-        "\033[38;2;255;0;0m\uF0C8\033[0m",
-        "\033[38;2;0;255;0m\uF0C8\033[0m",
-        "\033[38;2;0;0;255m\uF0C8\033[0m",
-        "\033[38;2;255;255;255m\uF0C8\033[0m",
-        "\033[38;2;255;150;0m\uF0C8\033[0m",
-        "\033[38;2;255;255;0m\uF0C8\033[0m"
-    };
+    static const char *colors[] = {"\033[38;2;255;0;0m\uF0C8\033[0m",
+                                   "\033[38;2;0;255;0m\uF0C8\033[0m",
+                                   "\033[38;2;0;0;255m\uF0C8\033[0m",
+                                   "\033[38;2;255;255;255m\uF0C8\033[0m",
+                                   "\033[38;2;255;150;0m\uF0C8\033[0m",
+                                   "\033[38;2;255;255;0m\uF0C8\033[0m"};
 
     s32 cc[3];
     u8 faces[54];
@@ -366,76 +363,6 @@ internal void PrettyPrint(Cube &c) {
         printf("        ");
         for (int j = 0; j < 3; j++) {
             printf("%s ", colors[faces[map[9 + 3 * 12 + i * 3 + j]]]);
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
-
-internal void Print(Cube &c) {
-    static const char colors[] = {'R', 'G', 'B', 'W', 'O', 'Y'};
-    s32 cc[3];
-    char faces[54];
-
-    for (int i = 0; i < 12; i++) {
-        EdgeColor(c, Edge(i), cc);
-        faces[i * 2 + 0] = colors[cc[0]];
-        faces[i * 2 + 1] = colors[cc[1]];
-    }
-
-    for (int i = 0; i < 8; i++) {
-        CornerColor(c, Corner(i), cc);
-        faces[24 + i * 3 + 0] = colors[cc[0]];
-        faces[24 + i * 3 + 1] = colors[cc[1]];
-        faces[24 + i * 3 + 2] = colors[cc[2]];
-    }
-
-    for (int i = 0; i < 6; i++) {
-        faces[48 + i] = colors[i];
-    }
-
-    // 2d mapping of the cube, 54 faces, see map.py
-    // clang-format off
-    static const u8 map[] = {
-                     24,  0, 27,
-                     6, 53,  2,
-                     33,  4, 30,
-
-        25,  7, 34,  35,  5, 32,  31,  3, 28,  29,  1, 26,
-        13, 49, 11,  10, 52,  8,   9, 50, 15,  14, 48, 12,
-        40, 19, 37,  38, 17, 47,  46, 23, 43,  44, 21, 41,
-
-                     36, 16, 45,
-                     18, 51, 22,
-                     39, 20, 42
-    };
-    // clang-format on
-
-    printf("\n");
-    for (int i = 0; i < 3; i++) {
-        printf("        ");
-        for (int j = 0; j < 3; j++) {
-            printf("%c ", faces[map[i * 3 + j]]);
-        }
-        printf("\n");
-    }
-    printf("\n");
-    for (int i = 0; i < 3; i++) {
-        printf(" ");
-        for (int j = 0; j < 12; j++) {
-            if (j % 3 == 0 and j > 0) {
-                printf(" %c ", faces[map[9 + i * 12 + j]]);
-            } else {
-                printf("%c ", faces[map[9 + i * 12 + j]]);
-            }
-        }
-        printf("\n");
-    }
-    printf("\n");
-    for (int i = 0; i < 3; i++) {
-        printf("        ");
-        for (int j = 0; j < 3; j++) {
-            printf("%c ", faces[map[9 + 3 * 12 + i * 3 + j]]);
         }
         printf("\n");
     }
@@ -639,3 +566,20 @@ static const char *kNames[] = {"R", "2R", "R'", "L", "2L", "L'",
 static const MoveFunc kMoves[] = {&R, &R2, &Rprime, &L, &L2, &Lprime,
                                   &U, &U2, &Uprime, &D, &D2, &Dprime,
                                   &F, &F2, &Fprime, &B, &B2, &Bprime};
+
+// after the first move we do not allow moves of the same kind. E.g. after move
+// R, we disable R,R',2R. We only allow moves of the opposing faces
+// in one strict order.
+static const u32 kValidMoves[] = {
+    0b111111111111111111, 0b111111111111111000, 0b111111111111111000,
+    0b111111111111111000, 0b111111111111000000, 0b111111111111000000,
+    0b111111111111000000, 0b111111111000111111, 0b111111111000111111,
+    0b111111111000111111, 0b111111000000111111, 0b111111000000111111,
+    0b111111000000111111, 0b111000111111111111, 0b111000111111111111,
+    0b111000111111111111, 0b000000111111111111, 0b000000111111111111,
+    0b000000111111111111};
+
+internal void ApplyMove(Cube &c, s32 move) {
+    kMoves[move](c);
+    c.SetLastMoveIndex(move + 1);
+}
