@@ -21,10 +21,10 @@ Action space:
 L,R,U,D,F,B
 L',R',U',D',F',B'
 2L, 2R, 2U, 2D, 2F, 2B
+After the first move we can reduce the actions space from 18 to ~13.4, see genmoves.py
 
-Cost function:
-Pattern databases precomputed from solved state
+Heuristic function:
+Pattern databases precomputed for sub solutions
 
 Search algo:
-IDA* - Iterative Deepening A*
-This is a depth first search
+We can try true A*, given that the heuristic from the pattern database is consistent i.e. h(x) <= g(x, y) + h(y) for every edge (x, y), we can omit the g-cost check and therefore do not need a hash table. We keep parents of nodes as pointers and use a b-heap that optimizes for page tables.

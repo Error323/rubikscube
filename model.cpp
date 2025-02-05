@@ -41,7 +41,6 @@
 /// U=Up, B=Back, L=Left, R=Right, F=Front, D=Down
 /// R=Red, G=Green, B=Blue, W=White, Y=Yellow, O=Orange
 
-#include <functional>
 // edges
 enum Edge { UB, UR, UF, UL, FR, FL, BL, BR, DF, DL, DB, DR };
 
@@ -67,6 +66,9 @@ struct Cube {
     //  |   orientation
     //  position
     u64 edges;
+
+    // came from pointer
+    Cube *from;
 
     // 7 bits per corner: position(3), orientation(3), flipped(1)
     static constexpr u32 CORNER_BITS = 7;
@@ -223,6 +225,7 @@ struct Cube {
 
 internal void Init(Cube &c) {
     c.corners = c.edges = 0ull;
+    c.from = nullptr;
 
     for (s32 i = 0; i < 8; i++) {
         c.SetCornerPos(Corner(i), i);
@@ -289,7 +292,7 @@ internal void EdgeColor(Cube &c, Edge edge, s32 colors[2]) {
     // clang-format on
 
     if (c.GetEdgeOri(edge)) {
-        std::swap(colors[0], colors[1]);
+        Swap(colors[0], colors[1]);
     }
 }
 
