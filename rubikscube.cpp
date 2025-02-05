@@ -14,17 +14,20 @@
 #include "bfs.cpp"
 // clang-format on
 
-s32 main(void) {
+s32 main(int argc, char *argv[]) {
+    s32 depth = 6;
+    if (argc > 1) {
+        depth = atoi(argv[1]);
+    }
     srand(time(NULL));
     Cube cube;
     Init(cube);
     Cube goal = cube;
-    for (s32 i = 0; i < 7; i++) {
+    for (s32 i = 0; i < depth; i++) {
         s32 r = rand() % 18;
         printf("%s ", kNames[r]);
-        ApplyMove(cube, r);
+        kMoves[r](cube);
     }
-    cube.SetLastMoveIndex(0);
     PrettyPrint(cube);
     printf("\n");
     bool solved = Bfs(cube, goal);

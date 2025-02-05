@@ -1,5 +1,5 @@
 internal bool Bfs(Cube root, Cube goal) {
-    static const u64 maxsize = GiB(2) / sizeof(Cube);
+    static const u64 maxsize = GiB(6) / sizeof(Cube);
     Deque<Cube> q(maxsize);
     q.Push(root);
     s64 depth = 0;
