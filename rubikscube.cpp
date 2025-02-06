@@ -7,7 +7,7 @@
 #include <ctime>
 
 // clang-format off
-#include "utils.hpp"
+#include "utils.cpp"
 #include "deque.cpp"
 #include "model.cpp"
 #include "dfs.cpp"
@@ -19,9 +19,10 @@ s32 main(int argc, char *argv[]) {
     if (argc > 1) {
         depth = atoi(argv[1]);
     }
-    srand(time(NULL));
     Cube cube;
     Init(cube);
+
+    srand(time(NULL));
     Cube goal = cube;
     for (s32 i = 0; i < depth; i++) {
         s32 r = rand() % 18;
@@ -32,5 +33,6 @@ s32 main(int argc, char *argv[]) {
     printf("\n");
     bool solved = Bfs(cube, goal);
     printf("solved=%d\n", solved);
+
     return 0;
 }

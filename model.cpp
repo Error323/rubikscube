@@ -73,6 +73,14 @@ struct Cube {
     static constexpr u32 CORNER_BITS = 6;
     static constexpr u32 CORNER_POSITION = 0;
     static constexpr u32 CORNER_ORIENTATION = 3;
+    // Last 5 bits after 8 corners (bits [48..52])
+    static constexpr u32 LAST_MOVE_SHIFT = 48;
+    static constexpr u64 LAST_MOVE_MASK = 0b11111ull;
+    // 5 bits per edge: position(4), orientation(1)
+    static constexpr u32 EDGE_BITS = 5;
+    static constexpr u32 EDGE_POSITION = 0;
+    static constexpr u32 EDGE_ORIENTATION = 4;
+
 
     // Helpers to extract corner sub-fields
     inline u32 GetCornerCubie(Corner corner) const {
@@ -84,14 +92,11 @@ struct Cube {
     inline void SetCornerCubie(Corner corner, u32 cubie) {
         const u32 shift = corner * CORNER_BITS;
         constexpr u64 mask = 0b111111ull;
-        // Clear old bits
         corners &= ~(mask << shift);
-        // Insert new bits
         corners |= (static_cast<u64>(cubie) & mask) << shift;
     }
 
     inline u32 GetCornerPos(Corner corner) const {
-        // position bits = [0..2] within corner block
         const u32 shift = corner * CORNER_BITS + CORNER_POSITION;
         constexpr u64 mask = 0b111ull;
         return static_cast<u32>((corners >> shift) & mask);
@@ -100,14 +105,11 @@ struct Cube {
     inline void SetCornerPos(Corner corner, u32 pos) {
         const u32 shift = corner * CORNER_BITS + CORNER_POSITION;
         constexpr u64 mask = 0b111ull;
-        // Clear old bits
         corners &= ~(mask << shift);
-        // Insert new bits
         corners |= (static_cast<u64>(pos) & mask) << shift;
     }
 
     inline u32 GetCornerOri(Corner corner) const {
-        // orientation bits = [3..5] within 6-bit block
         const u32 shift = corner * CORNER_BITS + CORNER_ORIENTATION;
         constexpr u64 mask = 0b111ull;
         return static_cast<u32>((corners >> shift) & mask);
@@ -120,10 +122,6 @@ struct Cube {
         corners |= (static_cast<u64>(ori) & mask) << shift;
     }
 
-    // Last 5 bits after 8 corners (bits [48..52])
-    static constexpr u32 LAST_MOVE_SHIFT = 48;
-    static constexpr u64 LAST_MOVE_MASK = 0b11111ull;  // 5 bits
-
     inline u32 GetLastMoveIndex() const {
         return static_cast<u32>((corners >> LAST_MOVE_SHIFT) & LAST_MOVE_MASK);
     }
@@ -133,42 +131,35 @@ struct Cube {
         corners |= (static_cast<u64>(move) & LAST_MOVE_MASK) << LAST_MOVE_SHIFT;
     }
 
-    // 5 bits per edge: position(4), orientation(1)
-    static constexpr u32 EDGE_BITS = 5;
-    static constexpr u32 EDGE_POSITION = 0;     // offset [0..3]
-    static constexpr u32 EDGE_ORIENTATION = 4;  // offset [4]
-
     inline u32 GetEdgeCubie(Edge edge) const {
-        // edgeIndex in [0..11]
         const u32 shift = edge * EDGE_BITS;
-        constexpr u64 mask = 0b11111ull;  // 5 bits
+        constexpr u64 mask = 0b11111ull;
         return static_cast<u32>((edges >> shift) & mask);
     }
 
     inline void SetEdgeCubie(Edge edge, u32 cubie) {
         const u32 shift = edge * EDGE_BITS;
-        constexpr u64 mask = 0b11111ull;  // 4 bits
+        constexpr u64 mask = 0b11111ull;
         edges &= ~(mask << shift);
         edges |= (static_cast<u64>(cubie) & mask) << shift;
     }
 
     inline u32 GetEdgePos(Edge edge) const {
-        // edgeIndex in [0..11]
         const u32 shift = edge * EDGE_BITS + EDGE_POSITION;
-        constexpr u64 mask = 0b1111ull;  // 4 bits
+        constexpr u64 mask = 0b1111ull;
         return static_cast<u32>((edges >> shift) & mask);
     }
 
     inline void SetEdgePos(Edge edge, u32 pos) {
         const u32 shift = edge * EDGE_BITS + EDGE_POSITION;
-        constexpr u64 mask = 0b1111ull;  // 4 bits
+        constexpr u64 mask = 0b1111ull;
         edges &= ~(mask << shift);
         edges |= (static_cast<u64>(pos) & mask) << shift;
     }
 
     inline u32 GetEdgeOri(Edge edge) const {
         const u32 shift = edge * EDGE_BITS + EDGE_ORIENTATION;
-        constexpr u64 mask = 0b1ull;  // 1 bit
+        constexpr u64 mask = 0b1ull;
         return static_cast<u32>((edges >> shift) & mask);
     }
 
@@ -541,7 +532,7 @@ static const MoveFunc kMoves[] = {&R, &R2, &Rprime, &L, &L2, &Lprime,
 
 // after the first move we do not allow moves of the same kind. E.g. after move
 // R, we disable R,R',2R. We only allow moves of the opposing faces
-// in one strict order.
+// in one strict order. See scripts/genmoves.py
 static const u32 kValidMoves[] = {
     0b111111111111111111, 0b111111111111111000, 0b111111111111111000,
     0b111111111111111000, 0b111111111111000000, 0b111111111111000000,
