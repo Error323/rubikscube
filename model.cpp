@@ -237,17 +237,24 @@ internal void Init(Cube &c) {
 }
 
 internal void CornerColor(Cube &c, Corner corner, s32 colors[3]) {
+    // see scripts/corners.py
     static const u8 CO[2][3][2][3] = {{{{0, 1, 2}, {0, 2, 1}},
                                        {{1, 2, 0}, {1, 0, 2}},
                                        {{2, 0, 1}, {2, 1, 0}}},
                                       {{{0, 1, 2}, {0, 2, 1}},
                                        {{2, 0, 1}, {2, 1, 0}},
                                        {{1, 2, 0}, {1, 0, 2}}}};
+    // see scripts/manhatten.py
+    static const u64 kFlipped = 0x55aa55aa55aa55aaull;
 
     s32 tmp[] = {0, 0, 0};
     auto pos = c.GetCornerPos(corner);
     auto ori = c.GetCornerOri(corner);
     auto flipped = c.GetCornerFlipped(corner);
+    auto flipped_new = (kFlipped >> (pos * 8 + corner)) & 1;
+
+    assert(flipped == flipped_new);
+
 
     u8 o0 = CO[pos & 1][ori][flipped][0];
     u8 o1 = CO[pos & 1][ori][flipped][1];
