@@ -51,11 +51,10 @@ enum Corner { ULB, URB, URF, ULF, DLF, DLB, DRB, DRF };
 enum Color { RED, GREEN, BLUE, WHITE, ORANGE, YELLOW };
 
 struct Cube {
-    // (3 + 3 + 1) * 8 + 5 = 61 bits
-    //  |   |   |    |   |
-    //  |   |   |    |   last move index
-    //  |   |   |    nof corners
-    //  |   |   flipped
+    // (3 + 3) * 8 + 5 = 53 bits
+    //  |   |    |   |
+    //  |   |    |   last move index
+    //  |   |    nof corners
     //  |   orientation
     //  position
     u64 corners;
@@ -70,23 +69,21 @@ struct Cube {
     // came from pointer
     Cube *from;
 
-    // 7 bits per corner: position(3), orientation(3), flipped(1)
-    static constexpr u32 CORNER_BITS = 7;
-    static constexpr u32 CORNER_POSITION = 0;  // offset within the 7 bits
+    // 6 bits per corner: position(3), orientation(3)
+    static constexpr u32 CORNER_BITS = 6;
+    static constexpr u32 CORNER_POSITION = 0;
     static constexpr u32 CORNER_ORIENTATION = 3;
-    static constexpr u32 CORNER_FLIPPED = 6;
 
     // Helpers to extract corner sub-fields
     inline u32 GetCornerCubie(Corner corner) const {
-        // cornerIndex in [0..7]
         const u32 shift = corner * CORNER_BITS;
-        constexpr u64 mask = 0b1111111ULL;  // 7 bits
+        constexpr u64 mask = 0b111111ull;
         return static_cast<u32>((corners >> shift) & mask);
     }
 
     inline void SetCornerCubie(Corner corner, u32 cubie) {
         const u32 shift = corner * CORNER_BITS;
-        constexpr u64 mask = 0b1111111ULL;  // 7 bits
+        constexpr u64 mask = 0b111111ull;
         // Clear old bits
         corners &= ~(mask << shift);
         // Insert new bits
@@ -94,16 +91,15 @@ struct Cube {
     }
 
     inline u32 GetCornerPos(Corner corner) const {
-        // cornerIndex in [0..7]
-        // position bits = [0..2] within that corner block
+        // position bits = [0..2] within corner block
         const u32 shift = corner * CORNER_BITS + CORNER_POSITION;
-        constexpr u64 mask = 0b111ULL;  // 3 bits
+        constexpr u64 mask = 0b111ull;
         return static_cast<u32>((corners >> shift) & mask);
     }
 
     inline void SetCornerPos(Corner corner, u32 pos) {
         const u32 shift = corner * CORNER_BITS + CORNER_POSITION;
-        constexpr u64 mask = 0b111ULL;  // 3 bits
+        constexpr u64 mask = 0b111ull;
         // Clear old bits
         corners &= ~(mask << shift);
         // Insert new bits
@@ -111,41 +107,22 @@ struct Cube {
     }
 
     inline u32 GetCornerOri(Corner corner) const {
-        // orientation bits = [3..5] within that 7-bit block
+        // orientation bits = [3..5] within 6-bit block
         const u32 shift = corner * CORNER_BITS + CORNER_ORIENTATION;
-        constexpr u64 mask = 0b111ULL;  // 3 bits
+        constexpr u64 mask = 0b111ull;
         return static_cast<u32>((corners >> shift) & mask);
     }
 
     inline void SetCornerOri(Corner corner, u32 ori) {
         const u32 shift = corner * CORNER_BITS + CORNER_ORIENTATION;
-        constexpr u64 mask = 0b111ULL;  // 3 bits
+        constexpr u64 mask = 0b111ull;
         corners &= ~(mask << shift);
         corners |= (static_cast<u64>(ori) & mask) << shift;
     }
 
-    inline u32 GetCornerFlipped(Corner corner) const {
-        // flipped bit = [6]
-        const u32 shift = corner * CORNER_BITS + CORNER_FLIPPED;
-        constexpr u64 mask = 0b1ULL;  // 1 bit
-        return static_cast<u32>((corners >> shift) & mask);
-    }
-
-    inline void SetCornerFlipped(Corner corner, u32 flipped) {
-        const u32 shift = corner * CORNER_BITS + CORNER_FLIPPED;
-        constexpr u64 mask = 0b1ULL;
-        corners &= ~(mask << shift);
-        corners |= (static_cast<u64>(flipped) & mask) << shift;
-    }
-
-    inline void CornerFlip(Corner corner) {
-        const u32 shift = corner * CORNER_BITS + CORNER_FLIPPED;
-        corners ^= 1ull << shift;
-    }
-
-    // Last 5 bits after 8 corners (bits [56..60])
-    static constexpr u32 LAST_MOVE_SHIFT = 56;
-    static constexpr u64 LAST_MOVE_MASK = 0b11111ULL;  // 5 bits
+    // Last 5 bits after 8 corners (bits [48..52])
+    static constexpr u32 LAST_MOVE_SHIFT = 48;
+    static constexpr u64 LAST_MOVE_MASK = 0b11111ull;  // 5 bits
 
     inline u32 GetLastMoveIndex() const {
         return static_cast<u32>((corners >> LAST_MOVE_SHIFT) & LAST_MOVE_MASK);
@@ -164,13 +141,13 @@ struct Cube {
     inline u32 GetEdgeCubie(Edge edge) const {
         // edgeIndex in [0..11]
         const u32 shift = edge * EDGE_BITS;
-        constexpr u64 mask = 0b11111ULL;  // 5 bits
+        constexpr u64 mask = 0b11111ull;  // 5 bits
         return static_cast<u32>((edges >> shift) & mask);
     }
 
     inline void SetEdgeCubie(Edge edge, u32 cubie) {
         const u32 shift = edge * EDGE_BITS;
-        constexpr u64 mask = 0b11111ULL;  // 4 bits
+        constexpr u64 mask = 0b11111ull;  // 4 bits
         edges &= ~(mask << shift);
         edges |= (static_cast<u64>(cubie) & mask) << shift;
     }
@@ -178,26 +155,26 @@ struct Cube {
     inline u32 GetEdgePos(Edge edge) const {
         // edgeIndex in [0..11]
         const u32 shift = edge * EDGE_BITS + EDGE_POSITION;
-        constexpr u64 mask = 0b1111ULL;  // 4 bits
+        constexpr u64 mask = 0b1111ull;  // 4 bits
         return static_cast<u32>((edges >> shift) & mask);
     }
 
     inline void SetEdgePos(Edge edge, u32 pos) {
         const u32 shift = edge * EDGE_BITS + EDGE_POSITION;
-        constexpr u64 mask = 0b1111ULL;  // 4 bits
+        constexpr u64 mask = 0b1111ull;  // 4 bits
         edges &= ~(mask << shift);
         edges |= (static_cast<u64>(pos) & mask) << shift;
     }
 
     inline u32 GetEdgeOri(Edge edge) const {
         const u32 shift = edge * EDGE_BITS + EDGE_ORIENTATION;
-        constexpr u64 mask = 0b1ULL;  // 1 bit
+        constexpr u64 mask = 0b1ull;  // 1 bit
         return static_cast<u32>((edges >> shift) & mask);
     }
 
     inline void SetEdgeOri(Edge edge, u32 ori) {
         const u32 shift = edge * EDGE_BITS + EDGE_ORIENTATION;
-        constexpr u64 mask = 0b1ULL;
+        constexpr u64 mask = 0b1ull;
         edges &= ~(mask << shift);
         edges |= (static_cast<u64>(ori) & mask) << shift;
     }
@@ -208,7 +185,6 @@ struct Cube {
     }
 
     inline void Update(Corner corner, u32 n) {
-        CornerFlip(corner);
         auto ori = GetCornerOri(corner);
         ori += n;
         ori %= 3;
@@ -217,7 +193,7 @@ struct Cube {
 
     bool operator==(const Cube &other) const {
         static const u64 edge_mask = 0xfffffffffffffff;
-        static const u64 corner_mask = 0xffffffffffffff;
+        static const u64 corner_mask = 0xffffffffffff;
         return (edges & edge_mask) == (other.edges & edge_mask) &&
                (corners & corner_mask) == (other.corners & corner_mask);
     }
@@ -250,11 +226,7 @@ internal void CornerColor(Cube &c, Corner corner, s32 colors[3]) {
     s32 tmp[] = {0, 0, 0};
     auto pos = c.GetCornerPos(corner);
     auto ori = c.GetCornerOri(corner);
-    auto flipped = c.GetCornerFlipped(corner);
-    auto flipped_new = (kFlipped >> (pos * 8 + corner)) & 1;
-
-    assert(flipped == flipped_new);
-
+    auto flipped = (kFlipped >> (pos * 8 + corner)) & 1;
 
     u8 o0 = CO[pos & 1][ori][flipped][0];
     u8 o1 = CO[pos & 1][ori][flipped][1];
@@ -446,11 +418,6 @@ internal inline void U(Cube &c) {
     c.SetCornerCubie(URB, c.GetCornerCubie(ULB));
     c.SetCornerCubie(ULB, tmp);
 
-    c.CornerFlip(ULF);
-    c.CornerFlip(URF);
-    c.CornerFlip(URB);
-    c.CornerFlip(ULB);
-
     tmp = c.GetEdgeCubie(UL);
     c.SetEdgeCubie(UL, c.GetEdgeCubie(UF));
     c.SetEdgeCubie(UF, c.GetEdgeCubie(UR));
@@ -475,11 +442,6 @@ internal inline void D(Cube &c) {
     c.SetCornerCubie(DRB, c.GetCornerCubie(DRF));
     c.SetCornerCubie(DRF, c.GetCornerCubie(DLF));
     c.SetCornerCubie(DLF, tmp);
-
-    c.CornerFlip(DLB);
-    c.CornerFlip(DRB);
-    c.CornerFlip(DRF);
-    c.CornerFlip(DLF);
 
     tmp = c.GetEdgeCubie(DB);
     c.SetEdgeCubie(DB, c.GetEdgeCubie(DR));
