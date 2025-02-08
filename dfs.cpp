@@ -1,27 +1,20 @@
-/// Allows us to compare movegenerator with Korf's paper
-///
-/// depth |            nodes
-/// ------+-----------------------------
-/// 1     |                           18
-/// 2     |                          243
-/// 3     |                        3,240
-/// 4     |                       43,254
-/// 5     |                      577,368
-/// 6     |                    7,706,988
-/// 7     |                  102,876,480
-/// 8     |                1,373,243,544
-/// 9     |               18,330,699,168
-/// 10    |              244,686,773,808
-/// 11    |            3,266,193,870,720
-/// 12    |           43,598,688,377,184
-/// 13    |          581,975,750,199,168
-/// 14    |        7,768,485,393,179,328
-/// 15    |      103,697,388,221,736,960
-/// 16    |    1,384,201,395,738,071,424
-/// 17    |   18,476,969,736,848,122,368
-/// 18    |  246,639,261,965,462,754,048
-internal u64 Dfs(Cube cube, s32 depth) {
-    if (depth == 0) {
+internal PermutationIndexer<8> ci;
+internal PermutationIndexer<12, PICKED> ei;
+internal Database cornerdb;
+internal Database edge1db;
+internal Database edge2db;
+internal u64 nodes{0};
+
+internal u64 Dfs(Cube cube, u8 depth, u8 maxdepth) {
+    nodes++;
+    u32 i1 = CornerIndex(ci, cube);
+    u32 i2 = EdgeIndex<PICKED>(ei, cube, 0);
+    u32 i3 = EdgeIndex<PICKED>(ei, cube, 12 - PICKED);
+    auto b1 = cornerdb.Update(i1, depth);
+    auto b2 = edge1db.Update(i2, depth);
+    auto b3 = edge2db.Update(i3, depth);
+
+    if (depth == maxdepth || b1 + b2 + b3 == 0) {
         return 1;
     }
 
@@ -32,9 +25,31 @@ internal u64 Dfs(Cube cube, s32 depth) {
         s32 move = __builtin_ffs(valid) - 1;
         valid &= valid - 1;
         ApplyMove(cube, move);
-        sum += Dfs(cube, depth - 1);
+        sum += Dfs(cube, depth + 1, maxdepth);
         cube = tmp;
     }
 
     return sum;
+}
+
+internal void Iddfs() {
+    Cube root;
+    Init(root);
+    for (u8 depth = 0; depth < 12; depth++) {
+        Dfs(root, 0, depth);
+        u64 sum = 0;
+        for (u32 j = 0; j < cornerdb.num_entries; j++) {
+            sum += cornerdb.Get(j) == 0xf;
+        }
+        for (u32 j = 0; j < edge1db.num_entries; j++) {
+            sum += edge1db.Get(j) == 0xf;
+        }
+        for (u32 j = 0; j < edge2db.num_entries; j++) {
+            sum += edge2db.Get(j) == 0xf;
+        }
+        printf("D:%02u TODO:%lu N:%lu\n", depth, sum, nodes);
+        if (sum == 0) {
+            break;
+        }
+    }
 }

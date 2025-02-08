@@ -66,9 +66,6 @@ struct Cube {
     //  position
     u64 edges;
 
-    // came from pointer
-    Cube *from;
-
     // 6 bits per corner: position(3), orientation(3)
     static constexpr u32 CORNER_BITS = 6;
     static constexpr u32 CORNER_POSITION = 0;
@@ -192,7 +189,6 @@ struct Cube {
 
 internal void Init(Cube &c) {
     c.corners = c.edges = 0ull;
-    c.from = nullptr;
 
     for (s32 i = 0; i < 8; i++) {
         c.SetCornerPos(Corner(i), i);
@@ -294,20 +290,20 @@ internal void PrettyPrint(Cube &c) {
         faces[48 + i] = i;
     }
 
-    // 2d mapping of the cube, 54 faces, see map.py
+    // 2d mapping of the cube, 54 faces, see scripts/map.py
     // clang-format off
     static const u8 map[] = {
-        24,  0, 27,
-        6, 53,  2,
-        33,  4, 30,
+                     24,  0, 27,
+                     6, 53,  2,
+                     33,  4, 30,
 
         25,  7, 34,  35,  5, 32,  31,  3, 28,  29,  1, 26,
         13, 49, 11,  10, 52,  8,   9, 50, 15,  14, 48, 12,
         40, 19, 37,  38, 17, 47,  46, 23, 43,  44, 21, 41,
 
-        36, 16, 45,
-        18, 51, 22,
-        39, 20, 42
+                     36, 16, 45,
+                     18, 51, 22,
+                     39, 20, 42
     };
     // clang-format on
 
@@ -545,4 +541,40 @@ static const u32 kValidMoves[] = {
 internal void ApplyMove(Cube &c, s32 move) {
     kMoves[move](c);
     c.SetLastMoveIndex(move + 1);
+}
+
+template<s32 K>
+internal u64 EdgeIndex(PermutationIndexer<12, K> &indexer, Cube &c, u32 start) {
+    assert(start + K <= 12);
+
+    u8 perm[K];
+    for (u32 i = start; i < start + K; i++) {
+        perm[i - start] = c.GetEdgePos(Edge(i));
+    }
+
+    u64 position = indexer.Index(perm);
+    u64 orientation = 0;
+    for (u32 i = 0; i < K; i++) {
+        orientation <<= 1;
+        orientation += c.GetEdgeOri(Edge(i));
+    }
+
+    return position * (1ull << K) + orientation;
+}
+
+internal u32 CornerIndex(PermutationIndexer<8> &indexer, Cube &c) {
+    u8 perm[8];
+    for (int i = 0; i < 8; i++) {
+        perm[i] = c.GetCornerPos(Corner(i));
+    }
+
+    u32 position = indexer.Index(perm);
+    u32 orientation = 0;
+    u32 n = 1;
+    for (int i = 0; i < 7; i++) {
+        orientation += c.GetCornerOri(Corner(i)) * n;
+        n *= 3;
+    }
+
+    return position * 2187 + orientation;
 }
