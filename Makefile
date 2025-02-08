@@ -9,7 +9,7 @@ dbg: rubikscube.cpp
 	$(CXX) -O0 -ggdb $(CXXFLAGS) -o $(TARGET)-dbg.exe rubikscube.cpp
 
 release: rubikscube.cpp
-	$(CXX) -O3 $(CXXFLAGS) -o $(TARGET).exe rubikscube.cpp
+	$(CXX) -O3 -DNDEBUG $(CXXFLAGS) -o $(TARGET).exe rubikscube.cpp
 
 clean:
 	rm -f $(TARGET)-dbg.exe $(TARGET).exe
