@@ -16,9 +16,11 @@
 #include "model.cpp"
 #include "deque.cpp"
 #include "bfs.cpp"
+#include "search.cpp"
 // clang-format on
 
 s32 main(void) {
+    Init(goal);
     u64 csize = Factorial(8) * Power(3, 7);
     u64 esize = (Factorial(12) / Factorial(12 - PICKED)) * Power(2, PICKED);
     u64 psize = Factorial(12);
