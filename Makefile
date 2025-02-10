@@ -11,6 +11,9 @@ dbg: rubikscube.cpp
 release: rubikscube.cpp
 	$(CXX) -O3 -DNDEBUG $(CXXFLAGS) -o $(TARGET).exe rubikscube.cpp
 
+profile: rubikscube.cpp
+	$(CXX) -O3 -DNDEBUG $(CXXFLAGS) -o $(TARGET).exe rubikscube.cpp -lprofiler
+
 clean:
 	rm -f $(TARGET)-dbg.exe $(TARGET).exe
 

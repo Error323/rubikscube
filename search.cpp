@@ -1,6 +1,7 @@
 #define FOUND 0
 #define NOT_FOUND 255
 internal Cube goal;
+internal u64 nodes = 0;
 
 internal u8 Heuristic(Cube root) {
     u64 index;
@@ -17,21 +18,21 @@ internal u8 Heuristic(Cube root) {
 }
 
 internal u8 Dfs(Cube *path, u8 g, u8 bound) {
-    Cube cube = path[g];
-    u8 f = g + Heuristic(cube);
+    nodes++;
+    u8 f = g + Heuristic(path[g]);
     if (f > bound) {
         return f;
     }
-    if (cube == goal) {
+    if (path[g] == goal) {
         return FOUND;
     }
 
     u8 min = NOT_FOUND, t = NOT_FOUND;
-    u32 valid = kValidMoves[cube.GetLastMoveIndex()];
+    u32 valid = kValidMoves[path[g].GetLastMoveIndex()];
     while (valid) {
         s32 move = __builtin_ffs(valid) - 1;
         valid &= valid - 1;
-        path[g + 1] = cube;
+        path[g + 1] = path[g];
         ApplyMove(path[g + 1], move);
         t = Dfs(path, g + 1, bound);
         if (t == FOUND) {
@@ -43,19 +44,29 @@ internal u8 Dfs(Cube *path, u8 g, u8 bound) {
 }
 
 internal bool IDAStar(Cube root) {
+    timespec start, end;
     Cube path[20];
     u8 bound = Heuristic(root);
     path[0] = root;
-    for (s32 i = 0; i < 20; i++) {
+    while (true) {
+        nodes = 0;
+        clock_gettime(CLOCK_MONOTONIC, &start);
         u8 t = Dfs(path, 0, bound);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        f64 elapsed = Timespec2Sec(&end) - Timespec2Sec(&start);
+        printf("T%0.3f N/s:%lu N:%lu\n", elapsed, u64(nodes/elapsed), nodes);
         if (t == FOUND) {
-            // print path, bound
-            while (i) {
-                auto move = path[i].GetLastMoveIndex();
+            // print path
+            s32 depth = 1;
+            while (true) {
+                auto move = path[depth].GetLastMoveIndex() - 1;
                 printf("%s ", kNames[move]);
-                i--;
+                if (path[depth] == goal) {
+                    break;
+                }
+                depth++;
             }
-            printf("\n");
+            printf("(%d)\n", depth);
             return true;
         }
         if (t == NOT_FOUND) {

@@ -1,3 +1,4 @@
 *.exe
 docs/
+data/
 .idea/

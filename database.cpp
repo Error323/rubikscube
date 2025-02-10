@@ -12,6 +12,13 @@ struct Database {
         memset(data, 0xff, size);
     }
 
+    void Load(const char *path) {
+        FILE *file;
+        file = fopen(path, "rb");
+        fread(data, 1, size, file);
+        fclose(file);
+    }
+
     void Write(const char *path) {
         FILE *file;
         file = fopen(path, "wb");
