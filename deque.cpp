@@ -21,10 +21,8 @@ class Deque {
 
         // Map the virtual memories to the same physical memory region
         for (int i = 0; i < 2; i++) {
-            void *p =
-                mmap(buffer_ + i * maxsize_in_mem_, maxsize_in_mem_,
-                     PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED, fd_, 0);
-            assert(p != MAP_FAILED);
+            mmap(buffer_ + i * maxsize_in_mem_, maxsize_in_mem_,
+                 PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED, fd_, 0);
         }
     }
 
@@ -39,7 +37,7 @@ class Deque {
 
     void Push(T x) {
         assert(size_ <= maxsize_ + s64(sizeof(x)));
-        *(T*)back_ = x;
+        *(T *)back_ = x;
         back_ += sizeof(x);
         if (back_ >= buffer_ + maxsize_in_mem_) {
             back_ -= maxsize_in_mem_;
@@ -47,9 +45,9 @@ class Deque {
         size_ = Min(size_ + (s64)sizeof(x), maxsize_);
     }
 
-    T& Pop() {
+    T &Pop() {
         assert(size_ > 0);
-        T* ptr = (T*) (back_ + maxsize_in_mem_ - size_);
+        T *ptr = (T *)(back_ + maxsize_in_mem_ - size_);
         size_ -= sizeof(T);
         return *ptr;
     }

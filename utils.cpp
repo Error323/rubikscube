@@ -43,3 +43,7 @@ template<typename T>
 internal T Max(T a, T b) {
     return a > b ? a : b;
 }
+
+internal inline f64 Timespec2Sec(const struct timespec *ts) {
+    return (f64)ts->tv_sec + (f64)ts->tv_nsec / 1.0e9;
+}

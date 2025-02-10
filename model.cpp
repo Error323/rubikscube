@@ -548,17 +548,31 @@ internal u64 EdgeIndex(PermutationIndexer<12, K> &indexer, Cube &c, u32 start) {
     assert(start + K <= 12);
 
     u8 perm[K];
-    for (u32 i = start; i < start + K; i++) {
-        perm[i - start] = c.GetEdgePos(Edge(i));
+    int n = 0;
+    u64 orientation = 0;
+    if (start == 0) {
+        for (u32 i = 0; i < 12 && n != PICKED; i++) {
+            u32 index = c.GetEdgePos(Edge(i));
+            if (index < PICKED) {
+                perm[index] = i;
+                orientation <<= 1;
+                orientation += c.GetEdgeOri(Edge(i));
+                n++;
+            }
+        }
+    } else {
+        for (u32 i = 0; i < 12 && n != PICKED; i++) {
+            u32 index = c.GetEdgePos(Edge(i));
+            if (index >= 12 - PICKED) {
+                perm[index - (12 - PICKED)] = i;
+                orientation <<= 1;
+                orientation += c.GetEdgeOri(Edge(i));
+                n++;
+            }
+        }
     }
 
     u64 position = indexer.Index(perm);
-    u64 orientation = 0;
-    for (u32 i = 0; i < K; i++) {
-        orientation <<= 1;
-        orientation += c.GetEdgeOri(Edge(i));
-    }
-
     return position * (1ull << K) + orientation;
 }
 
@@ -577,4 +591,12 @@ internal u32 CornerIndex(PermutationIndexer<8> &indexer, Cube &c) {
     }
 
     return position * 2187 + orientation;
+}
+
+internal u32 PermutationIndex(PermutationIndexer<12> &indexer, Cube &c) {
+    u8 perm[12];
+    for (int i = 0; i < 12; i++) {
+        perm[i] = c.GetEdgePos(Edge(i));
+    }
+    return indexer.Index(perm);
 }
