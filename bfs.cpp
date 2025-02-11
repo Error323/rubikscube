@@ -1,6 +1,3 @@
-internal PermutationIndexer<8> ci;
-internal PermutationIndexer<12, PICKED> ei;
-internal PermutationIndexer<12> pi;
 internal Database cornerdb;
 internal Database edge1db;
 internal Database edge2db;
@@ -9,6 +6,7 @@ internal Database permdb;
 
 internal bool Bfs(u64 maxsize) {
     timespec start, end;
+    maxsize *= 2;
     Deque<Cube> q(maxsize);
     Cube root;
     Init(root);
@@ -18,13 +16,13 @@ internal bool Bfs(u64 maxsize) {
     s64 todo = 1;
     u64 index = 0;
 
-    index = EdgeIndex<PICKED>(ei, root, 0);
+    index = EdgeIndex<PICKED>(root, 0);
     edge1db.Update(index, depth);
-    index = EdgeIndex<PICKED>(ei, root, 12 - PICKED);
+    index = EdgeIndex<PICKED>(root, 12 - PICKED);
     edge2db.Update(index, depth);
-    index = CornerIndex(ci, root);
+    index = CornerIndex(root);
     cornerdb.Update(index, depth);
-    index = PermutationIndex(pi, root);
+    index = PermutationIndex(root);
     permdb.Update(index, depth);
     while (q.Size() > 0 && todo > 0) {
         clock_gettime(CLOCK_MONOTONIC, &start);
@@ -44,13 +42,13 @@ internal bool Bfs(u64 maxsize) {
                 Cube next = cube;
                 ApplyMove(next, move);
                 bool updated = false;
-                index = EdgeIndex<PICKED>(ei, next, 0);
+                index = EdgeIndex<PICKED>(next, 0);
                 updated |= edge1db.Update(index, depth);
-                index = EdgeIndex<PICKED>(ei, next, 12 - PICKED);
+                index = EdgeIndex<PICKED>(next, 12 - PICKED);
                 updated |= edge2db.Update(index, depth);
-                index = CornerIndex(ci, next);
+                index = CornerIndex(next);
                 updated |= cornerdb.Update(index, depth);
-                index = PermutationIndex(pi, next);
+                index = PermutationIndex(next);
                 updated |= permdb.Update(index, depth);
                 if (updated) {
                     q.Push(next);

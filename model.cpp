@@ -544,7 +544,8 @@ internal void ApplyMove(Cube &c, s32 move) {
 }
 
 template<s32 K>
-internal u64 EdgeIndex(PermutationIndexer<12, K> &indexer, Cube &c, u32 start) {
+internal u64 EdgeIndex(Cube &c, u32 start) {
+    static PermutationIndexer<12, PICKED> indexer;
     assert(start + K <= 12);
 
     u8 perm[K];
@@ -576,7 +577,8 @@ internal u64 EdgeIndex(PermutationIndexer<12, K> &indexer, Cube &c, u32 start) {
     return position * (1ull << K) + orientation;
 }
 
-internal u32 CornerIndex(PermutationIndexer<8> &indexer, Cube &c) {
+internal u32 CornerIndex(Cube &c) {
+    static PermutationIndexer<8> indexer;
     u8 perm[8];
     for (int i = 0; i < 8; i++) {
         perm[i] = c.GetCornerPos(Corner(i));
@@ -593,7 +595,8 @@ internal u32 CornerIndex(PermutationIndexer<8> &indexer, Cube &c) {
     return position * 2187 + orientation;
 }
 
-internal u32 PermutationIndex(PermutationIndexer<12> &indexer, Cube &c) {
+internal u32 PermutationIndex(Cube &c) {
+    static PermutationIndexer<12> indexer;
     u8 perm[12];
     for (int i = 0; i < 12; i++) {
         perm[i] = c.GetEdgePos(Edge(i));

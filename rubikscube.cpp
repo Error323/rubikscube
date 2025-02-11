@@ -8,7 +8,7 @@
 #include <cstring>
 #include <ctime>
 
-#define PICKED 6
+#define PICKED 7
 
 // clang-format off
 #include "utils.cpp"
@@ -21,6 +21,8 @@
 // clang-format on
 
 s32 main(void) {
+    srand(1337);
+    //auto dbpath = "pattern.db";
     auto cornerpath = "data/corner.db";
     auto edge1path = "data/edge1.db";
     auto edge2path = "data/edge2.db";
@@ -29,7 +31,7 @@ s32 main(void) {
     u64 esize = (Factorial(12) / Factorial(12 - PICKED)) * Power(2, PICKED);
     u64 psize = Factorial(12);
 
-    if (directory_exists("data")) {
+    if (access(cornerpath, F_OK) == 0 && access(edge1path, F_OK) == 0 && access(edge2path, F_OK) == 0 && access(permpath, F_OK) == 0) {
         Cube root;
         Init(goal);
         Init(root);
@@ -41,9 +43,9 @@ s32 main(void) {
         edge2db.Load(edge2path);
         cornerdb.Load(cornerpath);
         permdb.Load(permpath);
-        s32 moves[] = {1, 5, 9, 6, 7, 10, 16, 14, 3, 5, 13, 0, 10, 7, 12, 3, 6, 2, 11};
         // scramble the cube
-        for (s32 move : moves) {
+        for (s32 i = 0; i < 20; i++) {
+            s32 move = rand() % 18;
             printf("%s ", kNames[move]);
             kMoves[move](root);
         }
@@ -52,6 +54,7 @@ s32 main(void) {
         // solve the cube
         IDAStar(root);
     } else {
+        printf("Generating database\n");
         printf("2x 12P%d edge db size = %lluMiB\n", PICKED, esize / MiB(1) / 2);
         printf("8! * 3^7 corner db size = %lluMiB\n", csize / MiB(1) / 2);
         printf("12! permutation db size = %lluMiB\n", psize / MiB(1) / 2);

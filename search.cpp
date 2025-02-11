@@ -6,13 +6,13 @@ internal u64 nodes = 0;
 internal u8 Heuristic(Cube root) {
     u64 index;
     u8 h = 0;
-    index = EdgeIndex<PICKED>(ei, root, 0);
+    index = EdgeIndex<PICKED>(root, 0);
     h = Max(edge1db.Get(index), h);
-    index = EdgeIndex<PICKED>(ei, root, 12 - PICKED);
+    index = EdgeIndex<PICKED>(root, 12 - PICKED);
     h = Max(edge2db.Get(index), h);
-    index = CornerIndex(ci, root);
+    index = CornerIndex(root);
     h = Max(cornerdb.Get(index), h);
-    index = PermutationIndex(pi, root);
+    index = PermutationIndex(root);
     h = Max(permdb.Get(index), h);
     return h;
 }
@@ -61,12 +61,14 @@ internal bool IDAStar(Cube root) {
             while (true) {
                 auto move = path[depth].GetLastMoveIndex() - 1;
                 printf("%s ", kNames[move]);
+                kMoves[move](root);
                 if (path[depth] == goal) {
                     break;
                 }
                 depth++;
             }
             printf("(%d)\n", depth);
+            PrettyPrint(root);
             return true;
         }
         if (t == NOT_FOUND) {
