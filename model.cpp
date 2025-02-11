@@ -576,7 +576,7 @@ internal u64 EdgeIndex(Cube &c, u32 start) {
     return position * (1ull << K) + orientation;
 }
 
-internal u32 CornerIndex(Cube &c) {
+internal u64 CornerIndex(Cube &c) {
     static PermutationIndexer<8> indexer;
     u8 perm[8];
     for (s32 i = 0; i < 8; i++) {
@@ -594,7 +594,7 @@ internal u32 CornerIndex(Cube &c) {
     return position * 2187 + orientation;
 }
 
-internal u32 PermutationIndex(Cube &c) {
+internal u64 PermutationIndex(Cube &c) {
     static PermutationIndexer<12> indexer;
     u8 perm[12];
     for (s32 i = 0; i < 12; i++) {

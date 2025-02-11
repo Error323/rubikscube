@@ -3,10 +3,10 @@ internal Database edge1db;
 internal Database edge2db;
 internal Database permdb;
 
-internal bool Bfs(u64 maxsize) {
+using Indexer = u64 (*)(Cube &c);
+internal bool Bfs(Database &db, Indexer indexer) {
     timespec start, end;
-    maxsize *= 2;
-    Deque<Cube> q(maxsize);
+    Deque<Cube> q(db.num_entries);
     Cube root;
     Init(root);
     q.Push(root);
@@ -15,14 +15,8 @@ internal bool Bfs(u64 maxsize) {
     s64 todo = 1;
     u64 index = 0;
 
-    index = EdgeIndex<PICKED>(root, 0);
-    edge1db.Update(index, depth);
-    index = EdgeIndex<PICKED>(root, 12 - PICKED);
-    edge2db.Update(index, depth);
-    index = CornerIndex(root);
-    cornerdb.Update(index, depth);
-    index = PermutationIndex(root);
-    permdb.Update(index, depth);
+    index = indexer(root);
+    db.Update(index, depth);
     while (q.Size() > 0 && todo > 0) {
         clock_gettime(CLOCK_MONOTONIC, &start);
         depth++;
@@ -32,7 +26,7 @@ internal bool Bfs(u64 maxsize) {
             Cube &cube = q.Pop();
             u32 valid = kValidMoves[cube.GetLastMoveIndex()];
             while (valid) {
-                if (q.Size() == maxsize) {
+                if (q.Size() == db.num_entries) {
                     return false;
                 }
                 nodes++;
@@ -40,16 +34,7 @@ internal bool Bfs(u64 maxsize) {
                 valid &= valid - 1;
                 Cube next = cube;
                 ApplyMove(next, move);
-                bool updated = false;
-                index = EdgeIndex<PICKED>(next, 0);
-                updated |= edge1db.Update(index, depth);
-                index = EdgeIndex<PICKED>(next, 12 - PICKED);
-                updated |= edge2db.Update(index, depth);
-                index = CornerIndex(next);
-                updated |= cornerdb.Update(index, depth);
-                index = PermutationIndex(next);
-                updated |= permdb.Update(index, depth);
-                if (updated) {
+                if (db.Update(indexer(next), depth)) {
                     q.Push(next);
                 }
             }
@@ -57,17 +42,8 @@ internal bool Bfs(u64 maxsize) {
         clock_gettime(CLOCK_MONOTONIC, &end);
 
         todo = 0;
-        for (u32 j = 0; j < edge1db.num_entries; j++) {
-            todo += edge1db.Get(j) == 0xf;
-        }
-        for (u32 j = 0; j < edge2db.num_entries; j++) {
-            todo += edge2db.Get(j) == 0xf;
-        }
-        for (u32 j = 0; j < cornerdb.num_entries; j++) {
-            todo += cornerdb.Get(j) == 0xf;
-        }
-        for (u32 j = 0; j < permdb.num_entries; j++) {
-            todo += permdb.Get(j) == 0xf;
+        for (u32 j = 0; j < db.num_entries; j++) {
+            todo += db.Get(j) == 0xf;
         }
 
         double elapsed = Timespec2Sec(&end) - Timespec2Sec(&start);

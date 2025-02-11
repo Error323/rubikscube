@@ -8,7 +8,7 @@
 #include <cstring>
 #include <ctime>
 
-#define PICKED 7
+#define PICKED 6
 
 // clang-format off
 #include "utils.cpp"
@@ -59,53 +59,37 @@ s32 main(s32 argc, char *argv[]) {
         // solve the cube
         IDAStar(root);
     } else {
-        printf("Generating database\n");
         printf("2x 12P%d edge db size = %lluMiB\n", PICKED, esize / MiB(1) / 2);
         printf("8! * 3^7 corner db size = %lluMiB\n", csize / MiB(1) / 2);
         printf("12! permutation db size = %lluMiB\n", psize / MiB(1) / 2);
-        edge1db.Init(esize);
-        edge2db.Init(esize);
-        cornerdb.Init(csize);
-        permdb.Init(psize);
 
-        if (!Bfs(Max(permdb.num_entries,
-                     Max(edge1db.num_entries, cornerdb.num_entries)))) {
-            fprintf(stderr, "not enough memory\n");
-            return 1;
+        Database db[] = {cornerdb, edge1db, edge2db, permdb};
+        u64 sz[] = {csize, esize, esize, psize};
+        const char *names[] = {"corner", "edge1", "edge2", "permutation"};
+        const char *paths[] = {cornerpath, edge1path, edge2path, permpath};
+        Indexer indexer[] = {
+            [](Cube &c) { return CornerIndex(c); },
+            [](Cube &c) { return EdgeIndex<PICKED>(c, 0); },
+            [](Cube &c) { return EdgeIndex<PICKED>(c, 12 - PICKED); },
+            [](Cube &c) { return PermutationIndex(c); }};
+
+        for (s32 i = 0; i < 4; i++) {
+            printf("Generating '%s'\n", names[i]);
+            db[i].Init(sz[i]);
+            if (!Bfs(db[i], indexer[i])) {
+                fprintf(stderr, "not enough memory\n");
+                return 1;
+            }
+
+            u64 sum = 0;
+            for (u32 j = 0; j < db[i].num_entries; j++) {
+                u8 v = db[i].Get(j);
+                sum += v;
+            }
+            printf("%s mean = %0.3f\n", names[i],
+                   sum / double(db[i].num_entries));
+            db[i].Write(paths[i]);
         }
-
-        u64 sum = 0;
-        for (u32 i = 0; i < cornerdb.num_entries; i++) {
-            u8 v = cornerdb.Get(i);
-            sum += v;
-        }
-        printf("corner mean = %0.3f\n", sum / double(cornerdb.num_entries));
-
-        sum = 0;
-        for (u32 i = 0; i < edge1db.num_entries; i++) {
-            u8 v = edge1db.Get(i);
-            sum += v;
-        }
-        printf("edge1 mean = %0.3f\n", sum / double(edge1db.num_entries));
-
-        sum = 0;
-        for (u32 i = 0; i < edge2db.num_entries; i++) {
-            u8 v = edge2db.Get(i);
-            sum += v;
-        }
-        printf("edge2 mean = %0.3f\n", sum / double(edge2db.num_entries));
-
-        sum = 0;
-        for (u32 i = 0; i < permdb.num_entries; i++) {
-            u8 v = permdb.Get(i);
-            sum += v;
-        }
-        printf("perm mean = %0.3f\n", sum / double(permdb.num_entries));
-
-        cornerdb.Write(cornerpath);
-        edge1db.Write(edge1path);
-        edge2db.Write(edge2path);
-        permdb.Write(permpath);
     }
 
     return 0;
