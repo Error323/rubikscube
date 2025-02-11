@@ -3,7 +3,6 @@ internal Database edge1db;
 internal Database edge2db;
 internal Database permdb;
 
-
 internal bool Bfs(u64 maxsize) {
     timespec start, end;
     maxsize *= 2;
@@ -72,8 +71,10 @@ internal bool Bfs(u64 maxsize) {
         }
 
         double elapsed = Timespec2Sec(&end) - Timespec2Sec(&start);
-        printf("Depth:%02lu MiB:%04lu Todo:%lu Nodes:%lu Time:%0.3f Nps:%0.1f\n", depth,
-               q.Size() * sizeof(Cube) / u32(MiB(1)), todo, nodes, elapsed, size/elapsed);
+        printf(
+            "Depth:%02lu MiB:%04lu Todo:%lu Nodes:%lu Time:%0.3f Nps:%0.1f\n",
+            depth, q.Size() * sizeof(Cube) / u32(MiB(1)), todo, nodes, elapsed,
+            size / elapsed);
     }
     return true;
 }

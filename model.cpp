@@ -78,7 +78,6 @@ struct Cube {
     static constexpr u32 EDGE_POSITION = 0;
     static constexpr u32 EDGE_ORIENTATION = 4;
 
-
     // Helpers to extract corner sub-fields
     inline u32 GetCornerCubie(Corner corner) const {
         const u32 shift = corner * CORNER_BITS;
@@ -273,20 +272,20 @@ internal void PrettyPrint(Cube &c) {
     s32 cc[3];
     u8 faces[54];
 
-    for (int i = 0; i < 12; i++) {
+    for (s32 i = 0; i < 12; i++) {
         EdgeColor(c, Edge(i), cc);
         faces[i * 2 + 0] = cc[0];
         faces[i * 2 + 1] = cc[1];
     }
 
-    for (int i = 0; i < 8; i++) {
+    for (s32 i = 0; i < 8; i++) {
         CornerColor(c, Corner(i), cc);
         faces[24 + i * 3 + 0] = cc[0];
         faces[24 + i * 3 + 1] = cc[1];
         faces[24 + i * 3 + 2] = cc[2];
     }
 
-    for (int i = 0; i < 6; i++) {
+    for (s32 i = 0; i < 6; i++) {
         faces[48 + i] = i;
     }
 
@@ -308,17 +307,17 @@ internal void PrettyPrint(Cube &c) {
     // clang-format on
 
     printf("\n");
-    for (int i = 0; i < 3; i++) {
+    for (s32 i = 0; i < 3; i++) {
         printf("        ");
-        for (int j = 0; j < 3; j++) {
+        for (s32 j = 0; j < 3; j++) {
             printf("%s ", colors[faces[map[i * 3 + j]]]);
         }
         printf("\n");
     }
     printf("\n");
-    for (int i = 0; i < 3; i++) {
+    for (s32 i = 0; i < 3; i++) {
         printf(" ");
-        for (int j = 0; j < 12; j++) {
+        for (s32 j = 0; j < 12; j++) {
             if (j % 3 == 0 and j > 0) {
                 printf(" %s ", colors[faces[map[9 + i * 12 + j]]]);
             } else {
@@ -328,9 +327,9 @@ internal void PrettyPrint(Cube &c) {
         printf("\n");
     }
     printf("\n");
-    for (int i = 0; i < 3; i++) {
+    for (s32 i = 0; i < 3; i++) {
         printf("        ");
-        for (int j = 0; j < 3; j++) {
+        for (s32 j = 0; j < 3; j++) {
             printf("%s ", colors[faces[map[9 + 3 * 12 + i * 3 + j]]]);
         }
         printf("\n");
@@ -543,13 +542,13 @@ internal void ApplyMove(Cube &c, s32 move) {
     c.SetLastMoveIndex(move + 1);
 }
 
-template<s32 K>
+template <s32 K>
 internal u64 EdgeIndex(Cube &c, u32 start) {
     static PermutationIndexer<12, PICKED> indexer;
     assert(start + K <= 12);
 
     u8 perm[K];
-    int n = 0;
+    s32 n = 0;
     u64 orientation = 0;
     if (start == 0) {
         for (u32 i = 0; i < 12 && n != PICKED; i++) {
@@ -580,14 +579,14 @@ internal u64 EdgeIndex(Cube &c, u32 start) {
 internal u32 CornerIndex(Cube &c) {
     static PermutationIndexer<8> indexer;
     u8 perm[8];
-    for (int i = 0; i < 8; i++) {
+    for (s32 i = 0; i < 8; i++) {
         perm[i] = c.GetCornerPos(Corner(i));
     }
 
     u32 position = indexer.Index(perm);
     u32 orientation = 0;
     u32 n = 1;
-    for (int i = 0; i < 7; i++) {
+    for (s32 i = 0; i < 7; i++) {
         orientation += c.GetCornerOri(Corner(i)) * n;
         n *= 3;
     }
@@ -598,7 +597,7 @@ internal u32 CornerIndex(Cube &c) {
 internal u32 PermutationIndex(Cube &c) {
     static PermutationIndexer<12> indexer;
     u8 perm[12];
-    for (int i = 0; i < 12; i++) {
+    for (s32 i = 0; i < 12; i++) {
         perm[i] = c.GetEdgePos(Edge(i));
     }
     return indexer.Index(perm);

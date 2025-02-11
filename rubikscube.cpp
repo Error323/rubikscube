@@ -20,9 +20,13 @@
 #include "search.cpp"
 // clang-format on
 
-s32 main(void) {
+s32 main(s32 argc, char *argv[]) {
+    s32 n = 10;
+    if (argc > 1) {
+        n = atoi(argv[1]);
+    }
     srand(1337);
-    //auto dbpath = "pattern.db";
+
     auto cornerpath = "data/corner.db";
     auto edge1path = "data/edge1.db";
     auto edge2path = "data/edge2.db";
@@ -31,7 +35,8 @@ s32 main(void) {
     u64 esize = (Factorial(12) / Factorial(12 - PICKED)) * Power(2, PICKED);
     u64 psize = Factorial(12);
 
-    if (access(cornerpath, F_OK) == 0 && access(edge1path, F_OK) == 0 && access(edge2path, F_OK) == 0 && access(permpath, F_OK) == 0) {
+    if (access(cornerpath, F_OK) == 0 && access(edge1path, F_OK) == 0 &&
+        access(edge2path, F_OK) == 0 && access(permpath, F_OK) == 0) {
         Cube root;
         Init(goal);
         Init(root);
@@ -44,7 +49,7 @@ s32 main(void) {
         cornerdb.Load(cornerpath);
         permdb.Load(permpath);
         // scramble the cube
-        for (s32 i = 0; i < 20; i++) {
+        for (s32 i = 0; i < n; i++) {
             s32 move = rand() % 18;
             printf("%s ", kNames[move]);
             kMoves[move](root);

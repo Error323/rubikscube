@@ -14,9 +14,7 @@ u64 Factorial(s32 n) {
     return f;
 }
 
-u64 Pick(s32 n, s32 k) {
-    return Factorial(n) / Factorial(n - k);
-}
+u64 Pick(s32 n, s32 k) { return Factorial(n) / Factorial(n - k); }
 
 u64 Power(s32 x, s32 y) {
     if (y == 0) {
