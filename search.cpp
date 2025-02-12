@@ -28,14 +28,11 @@ internal u8 Heuristic(Cube cube, u8 g, u8 bound) {
 }
 
 internal void MoveBestToFront(u8 *moves, u8 *heuristic, s32 i, s32 n) {
-    if (n == 1) {
-        return;
-    }
-
     u8 *first_move = moves + i;
     u8 *first_h = heuristic + i;
     u8 *best_h = first_h;
     u8 *best_move = first_move;
+
     for (s32 j = i + 1; j < n; j++) {
         if (heuristic[j] < *best_h) {
             best_h = heuristic + j;
