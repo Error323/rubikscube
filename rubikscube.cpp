@@ -35,7 +35,7 @@ s32 main(s32 argc, char *argv[]) {
     u64 esize = (Factorial(12) / Factorial(12 - PICKED)) * Power(2, PICKED);
     u64 psize = Factorial(12);
 
-    if (access("data", R_OK|W_OK|X_OK) != 0) {
+    if (access("data", R_OK | W_OK | X_OK) != 0) {
         fprintf(stderr, "Directory 'data' must exist and be accessible\n");
         return 1;
     }
@@ -49,7 +49,7 @@ s32 main(s32 argc, char *argv[]) {
         edge2db.Init(esize, Database::EDGE2);
         cornerdb.Init(csize, Database::CORNER);
         permdb.Init(psize, Database::PERMUTATION);
-        bool loaded = false;
+        bool loaded = true;
         loaded &= edge1db.Load(edge1path);
         loaded &= edge2db.Load(edge2path);
         loaded &= cornerdb.Load(cornerpath);
