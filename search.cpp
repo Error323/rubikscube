@@ -3,16 +3,16 @@
 internal Cube goal;
 internal u64 nodes = 0;
 
-internal u8 Heuristic(Cube root) {
+internal u8 Heuristic(Cube cube) {
     u64 index;
     u8 h = 0;
-    index = EdgeIndex<PICKED>(root, 0);
+    index = EdgeIndex<PICKED>(cube, 0);
     h = Max(edge1db.Get(index), h);
-    index = EdgeIndex<PICKED>(root, 12 - PICKED);
+    index = EdgeIndex<PICKED>(cube, 12 - PICKED);
     h = Max(edge2db.Get(index), h);
-    index = CornerIndex(root);
+    index = CornerIndex(cube);
     h = Max(cornerdb.Get(index), h);
-    index = PermutationIndex(root);
+    index = PermutationIndex(cube);
     h = Max(permdb.Get(index), h);
     return h;
 }
@@ -89,7 +89,7 @@ internal bool IDAStar(Cube root) {
         u8 t = Dfs(path, 0, bound, bound);
         clock_gettime(CLOCK_MONOTONIC, &end);
         f64 elapsed = Timespec2Sec(&end) - Timespec2Sec(&start);
-        printf("T%0.3f B:%u N/s:%lu N:%lu\n", elapsed, t, u64(nodes / elapsed), nodes);
+        printf("T%0.3f B:%u N/s:%lu N:%lu\n", elapsed, bound, u64(nodes / elapsed), nodes);
         if (t == FOUND) {
             // print path
             s32 depth = 1;
