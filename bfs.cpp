@@ -4,19 +4,18 @@ internal Database edge2db;
 internal Database permdb;
 
 using Indexer = u64 (*)(Cube &c);
+
 internal bool Bfs(Database &db, Indexer indexer) {
     timespec start, end;
-    Deque<Cube> q(db.num_entries);
+    Deque<Cube> q(db.hdr.num_entries);
     Cube root;
     Init(root);
     q.Push(root);
     s64 depth = 0;
     s64 nodes = 1;
     s64 todo = 1;
-    u64 index = 0;
 
-    index = indexer(root);
-    db.Update(index, depth);
+    db.Update(indexer(root), depth);
     while (q.Size() > 0 && todo > 0) {
         clock_gettime(CLOCK_MONOTONIC, &start);
         depth++;
@@ -26,10 +25,9 @@ internal bool Bfs(Database &db, Indexer indexer) {
             Cube &cube = q.Pop();
             u32 valid = kValidMoves[cube.GetLastMoveIndex()];
             while (valid) {
-                if (q.Size() == db.num_entries) {
+                if (q.Size() == db.hdr.num_entries) {
                     return false;
                 }
-                nodes++;
                 s32 move = __builtin_ffs(valid) - 1;
                 valid &= valid - 1;
                 Cube next = cube;
@@ -39,10 +37,12 @@ internal bool Bfs(Database &db, Indexer indexer) {
                 }
             }
         }
+
+        nodes += size;
         clock_gettime(CLOCK_MONOTONIC, &end);
 
         todo = 0;
-        for (u32 j = 0; j < db.num_entries; j++) {
+        for (u32 j = 0; j < db.hdr.num_entries; j++) {
             todo += db.Get(j) == 0xf;
         }
 

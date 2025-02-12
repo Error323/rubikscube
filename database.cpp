@@ -1,33 +1,56 @@
-struct Database {
-    u8 *data{nullptr};
-    u64 num_entries{0};
-    u64 size{0};
+#define MAGIC 0xfeffc2f9
 
-    void Init(u64 n) {
+struct Database {
+    enum Type { CORNER, EDGE1, EDGE2, PERMUTATION };
+    struct Header {
+        u32 magic{MAGIC};
+        Type type{CORNER};
+        u64 num_entries{0};
+        u64 size{0};
+    };
+
+    Header hdr;
+    u8 *data{nullptr};
+
+    void Init(u64 n, Type type) {
         assert(data == nullptr);
-        num_entries = n;
-        size = n >> 1;
-        data = new u8[size];
+        hdr.type = type;
+        hdr.num_entries = n;
+        hdr.size = n >> 1;
+        data = new u8[hdr.size];
         assert(data != nullptr);
-        memset(data, 0xff, size);
+        memset(data, 0xff, hdr.size);
     }
 
-    void Load(const char *path) {
+    bool Load(const char *path) {
+        Header hdr_{0};
         FILE *file;
         file = fopen(path, "rb");
-        fread(data, 1, size, file);
+        bool valid = true;
+        valid &= fread(&hdr_, sizeof(hdr_), 1, file) != 0;
+        valid &= (hdr_.magic == MAGIC);
+        valid &= (hdr_.type == hdr.type);
+        valid &= (hdr_.size == hdr.size);
+        valid &= (hdr_.num_entries == hdr.num_entries);
+        if (!valid) {
+            fprintf(stderr, "Invalid database file: '%s'\n", path);
+            return false;
+        }
+        fread(data, 1, hdr_.size, file);
         fclose(file);
+        return true;
     }
 
     void Write(const char *path) {
         FILE *file;
         file = fopen(path, "wb");
-        fwrite(data, 1, size, file);
+        fwrite(&hdr, sizeof(hdr), 1, file);
+        fwrite(data, 1, hdr.size, file);
         fclose(file);
     }
 
     bool Update(u64 i, u8 depth) {
-        assert(i < num_entries);
+        assert(i < hdr.num_entries);
         u8 shift = i & 1;
         shift *= 4;
         i >>= 1;
@@ -41,7 +64,7 @@ struct Database {
     }
 
     u8 Get(u64 i) {
-        assert(i < num_entries);
+        assert(i < hdr.num_entries);
         u8 shift = i & 1;
         shift *= 4;
         i >>= 1;

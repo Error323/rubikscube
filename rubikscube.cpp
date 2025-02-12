@@ -8,7 +8,7 @@
 #include <cstring>
 #include <ctime>
 
-#define PICKED 6
+#define PICKED 7
 
 // clang-format off
 #include "utils.cpp"
@@ -35,19 +35,28 @@ s32 main(s32 argc, char *argv[]) {
     u64 esize = (Factorial(12) / Factorial(12 - PICKED)) * Power(2, PICKED);
     u64 psize = Factorial(12);
 
+    if (access("data", R_OK|W_OK|X_OK) != 0) {
+        fprintf(stderr, "Directory 'data' must exist and be accessible\n");
+        return 1;
+    }
+
     if (access(cornerpath, F_OK) == 0 && access(edge1path, F_OK) == 0 &&
         access(edge2path, F_OK) == 0 && access(permpath, F_OK) == 0) {
         Cube root;
         Init(goal);
         Init(root);
-        edge1db.Init(esize);
-        edge2db.Init(esize);
-        cornerdb.Init(csize);
-        permdb.Init(psize);
-        edge1db.Load(edge1path);
-        edge2db.Load(edge2path);
-        cornerdb.Load(cornerpath);
-        permdb.Load(permpath);
+        edge1db.Init(esize, Database::EDGE1);
+        edge2db.Init(esize, Database::EDGE2);
+        cornerdb.Init(csize, Database::CORNER);
+        permdb.Init(psize, Database::PERMUTATION);
+        bool loaded = false;
+        loaded &= edge1db.Load(edge1path);
+        loaded &= edge2db.Load(edge2path);
+        loaded &= cornerdb.Load(cornerpath);
+        loaded &= permdb.Load(permpath);
+        if (!loaded) {
+            return 1;
+        }
         // scramble the cube
         for (s32 i = 0; i < n; i++) {
             s32 move = rand() % 18;
@@ -75,19 +84,19 @@ s32 main(s32 argc, char *argv[]) {
 
         for (s32 i = 0; i < 4; i++) {
             printf("Generating '%s'\n", names[i]);
-            db[i].Init(sz[i]);
+            db[i].Init(sz[i], Database::Type(i));
             if (!Bfs(db[i], indexer[i])) {
                 fprintf(stderr, "not enough memory\n");
                 return 1;
             }
 
             u64 sum = 0;
-            for (u32 j = 0; j < db[i].num_entries; j++) {
+            for (u32 j = 0; j < db[i].hdr.num_entries; j++) {
                 u8 v = db[i].Get(j);
                 sum += v;
             }
             printf("%s mean = %0.3f\n", names[i],
-                   sum / double(db[i].num_entries));
+                   sum / double(db[i].hdr.num_entries));
             db[i].Write(paths[i]);
         }
     }
