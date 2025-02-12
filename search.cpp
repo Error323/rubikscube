@@ -89,7 +89,7 @@ internal bool IDAStar(Cube root) {
         u8 t = Dfs(path, 0, bound, bound);
         clock_gettime(CLOCK_MONOTONIC, &end);
         f64 elapsed = Timespec2Sec(&end) - Timespec2Sec(&start);
-        printf("T%0.3f N/s:%lu N:%lu\n", elapsed, u64(nodes / elapsed), nodes);
+        printf("T%0.3f B:%u N/s:%lu N:%lu\n", elapsed, t, u64(nodes / elapsed), nodes);
         if (t == FOUND) {
             // print path
             s32 depth = 1;
