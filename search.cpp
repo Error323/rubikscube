@@ -67,6 +67,9 @@ internal u8 Dfs(Cube *path, u8 g, u8 h, u8 bound) {
     // shift the best move to the front, best being the lowest h-cost move
     for (s32 i = 0; i < n; i++) {
         MoveBestToFront(moves, heuristic, i, n);
+        if (g + heuristic[i] > bound) {
+            break;
+        }
         path[g + 1] = path[g];
         ApplyMove(path[g + 1], moves[i]);
         t = Dfs(path, g + 1, heuristic[i], bound);
@@ -89,7 +92,7 @@ internal bool IDAStar(Cube root) {
         u8 t = Dfs(path, 0, bound, bound);
         clock_gettime(CLOCK_MONOTONIC, &end);
         f64 elapsed = Timespec2Sec(&end) - Timespec2Sec(&start);
-        printf("T%0.3f B:%u N/s:%lu N:%lu\n", elapsed, bound, u64(nodes / elapsed), nodes);
+        printf("T%0.3f B:%u N/s:%'lu N:%'lu\n", elapsed, bound, u64(nodes / elapsed), nodes);
         if (t == FOUND) {
             // print path
             s32 depth = 1;

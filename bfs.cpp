@@ -48,9 +48,9 @@ internal bool Bfs(Database &db, Indexer indexer) {
 
         double elapsed = Timespec2Sec(&end) - Timespec2Sec(&start);
         printf(
-            "Depth:%02lu MiB:%04lu Todo:%lu Nodes:%lu Time:%0.3f Nps:%0.1f\n",
-            depth, q.Size() * sizeof(Cube) / u32(MiB(1)), todo, nodes, elapsed,
-            size / elapsed);
+            "Depth:%02lu MiB:%04lu Time:%0.3f Todo:%'lu Nodes:%'lu Nps:%'0lu\n",
+            depth, q.Size() * sizeof(Cube) / u32(MiB(1)), elapsed, todo, nodes,
+            u64(size / elapsed));
     }
     return true;
 }

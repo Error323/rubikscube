@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 
 #include <cassert>
+#include <clocale>
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
@@ -21,6 +22,8 @@
 // clang-format on
 
 s32 main(s32 argc, char *argv[]) {
+    setlocale(LC_NUMERIC, "");
+
     s32 n = 10;
     if (argc > 1) {
         n = atoi(argv[1]);
