@@ -3,15 +3,25 @@
 internal Cube goal;
 internal u64 nodes = 0;
 
-internal u8 Heuristic(Cube cube) {
+internal u8 Heuristic(Cube cube, u8 g, u8 bound) {
+    // we stop early if we exceed the bound. The databases are sorted from high
+    // to low on their mean value
     u64 index;
-    u8 h = 0;
+    index = CornerIndex(cube);
+    u8 h = cornerdb.Get(index);
+    if (g + 1 + h > bound) {
+        return h;
+    }
     index = EdgeIndex<PICKED>(cube, 0);
     h = Max(edge1db.Get(index), h);
+    if (g + 1 + h > bound) {
+        return h;
+    }
     index = EdgeIndex<PICKED>(cube, 12 - PICKED);
     h = Max(edge2db.Get(index), h);
-    index = CornerIndex(cube);
-    h = Max(cornerdb.Get(index), h);
+    if (g + 1 + h > bound) {
+        return h;
+    }
     index = PermutationIndex(cube);
     h = Max(permdb.Get(index), h);
     return h;
@@ -37,12 +47,7 @@ internal void MoveBestToFront(u8 *moves, u8 *heuristic, s32 i, s32 n) {
     Swap(*first_h, *best_h);
 }
 
-internal u8 Dfs(Cube *path, u8 g, u8 h, u8 bound) {
-    nodes++;
-    u8 f = g + h;
-    if (f > bound) {
-        return f;
-    }
+internal u8 Dfs(Cube *path, u8 g, u8 bound) {
     if (path[g] == goal) {
         return FOUND;
     }
@@ -59,20 +64,22 @@ internal u8 Dfs(Cube *path, u8 g, u8 h, u8 bound) {
         moves[n] = move;
         path[g + 1] = path[g];
         ApplyMove(path[g + 1], move);
-        heuristic[n] = Heuristic(path[g + 1]);
+        heuristic[n] = Heuristic(path[g + 1], g, bound);
         valid &= valid - 1;
         n++;
     }
 
+    nodes += n;
+
     // shift the best move to the front, best being the lowest h-cost move
     for (s32 i = 0; i < n; i++) {
         MoveBestToFront(moves, heuristic, i, n);
-        if (g + heuristic[i] > bound) {
-            break;
+        if (g + 1 + heuristic[i] > bound) {
+            return g + 1 + heuristic[i];
         }
         path[g + 1] = path[g];
         ApplyMove(path[g + 1], moves[i]);
-        t = Dfs(path, g + 1, heuristic[i], bound);
+        t = Dfs(path, g + 1, bound);
         if (t == FOUND) {
             return FOUND;
         }
@@ -84,15 +91,16 @@ internal u8 Dfs(Cube *path, u8 g, u8 h, u8 bound) {
 internal bool IDAStar(Cube root) {
     timespec start, end;
     Cube path[20];
-    u8 bound = Heuristic(root);
+    u8 bound = Heuristic(root, 0, 255);
     path[0] = root;
     while (true) {
         nodes = 0;
         clock_gettime(CLOCK_MONOTONIC, &start);
-        u8 t = Dfs(path, 0, bound, bound);
+        u8 t = Dfs(path, 0, bound);
         clock_gettime(CLOCK_MONOTONIC, &end);
         f64 elapsed = Timespec2Sec(&end) - Timespec2Sec(&start);
-        printf("T%0.3f B:%u N/s:%'lu N:%'lu\n", elapsed, bound, u64(nodes / elapsed), nodes);
+        printf("T%0.3f B:%u N/s:%'lu N:%'lu\n", elapsed, bound,
+               u64(nodes / elapsed), nodes);
         if (t == FOUND) {
             // print path
             s32 depth = 1;
