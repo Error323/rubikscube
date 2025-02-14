@@ -518,9 +518,9 @@ internal inline void Bprime(Cube &c) {
 }
 
 using MoveFunc = void (*)(Cube &);
-static const char *kNames[] = {"R", "2R", "R'", "L", "2L", "L'",
-                               "U", "2U", "U'", "D", "2D", "D'",
-                               "F", "2F", "F'", "B", "2B", "B'"};
+static const char *kNames[] = {"R", "R2", "R'", "L", "L2", "L'",
+                               "U", "U2", "U'", "D", "D2", "D'",
+                               "F", "F2", "F'", "B", "B2", "B'"};
 static const MoveFunc kMoves[] = {&R, &R2, &Rprime, &L, &L2, &Lprime,
                                   &U, &U2, &Uprime, &D, &D2, &Dprime,
                                   &F, &F2, &Fprime, &B, &B2, &Bprime};

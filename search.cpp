@@ -45,10 +45,6 @@ internal void MoveBestToFront(u8 *moves, u8 *heuristic, s32 i, s32 n) {
 }
 
 internal u8 Dfs(Cube *path, u8 g, u8 bound) {
-    if (path[g] == goal) {
-        return FOUND;
-    }
-
     u8 min = NOT_FOUND, t = NOT_FOUND;
     u32 valid = kValidMoves[path[g].GetLastMoveIndex()];
     u8 heuristic[18];
@@ -76,6 +72,9 @@ internal u8 Dfs(Cube *path, u8 g, u8 bound) {
         }
         path[g + 1] = path[g];
         ApplyMove(path[g + 1], moves[i]);
+        if (path[g + 1] == goal) {
+            return FOUND;
+        }
         t = Dfs(path, g + 1, bound);
         if (t == FOUND) {
             return FOUND;
