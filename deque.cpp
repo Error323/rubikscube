@@ -5,7 +5,16 @@ class Deque {
         u64 pagesize = getpagesize();
         maxsize_in_mem_ = RoundUp(n * sizeof(T), pagesize);
         maxsize_ = n * sizeof(T);
-        fd_ = memfd_create("deque", 0);
+
+        static const char *memfile = "/tmp/rubiks.mem";
+        if (access(memfile, R_OK | W_OK) != 0) {
+            fd_ = creat(memfile, 0666);
+            close(fd_);
+        }
+
+        fd_ = open(memfile, O_RDWR);
+
+        //fd_ = memfd_create("deque", 0);
         assert(fd_ != -1);
 
         // allocate virtual memory

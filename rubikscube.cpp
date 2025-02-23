@@ -1,5 +1,6 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 #include <cassert>
 #include <cerrno>
@@ -10,7 +11,7 @@
 #include <cstring>
 #include <ctime>
 
-#define PICKED 7
+#define PICKED 8
 
 // clang-format off
 #include "utils.cpp"

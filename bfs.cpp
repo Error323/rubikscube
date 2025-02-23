@@ -7,7 +7,7 @@ using Indexer = u64 (*)(Cube &c);
 
 internal bool Bfs(Database &db, Indexer indexer) {
     timespec start, end;
-    Deque<Cube> q(db.hdr.num_entries);
+    Deque<Cube> q(db.hdr.num_entries * 0.6);
     Cube root;
     Init(root);
     q.Push(root);
