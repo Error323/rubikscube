@@ -45,6 +45,10 @@ internal void MoveBestToFront(u8 *moves, u8 *heuristic, s32 i, s32 n) {
 }
 
 internal u8 Dfs(Cube *path, u8 g, u8 bound) {
+    if (path[g] == goal) {
+        return FOUND;
+    }
+
     u8 min = NOT_FOUND, t = NOT_FOUND;
     u32 valid = kValidMoves[path[g].GetLastMoveIndex()];
     u8 heuristic[18];
@@ -72,9 +76,6 @@ internal u8 Dfs(Cube *path, u8 g, u8 bound) {
         }
         path[g + 1] = path[g];
         ApplyMove(path[g + 1], moves[i]);
-        if (path[g + 1] == goal) {
-            return FOUND;
-        }
         t = Dfs(path, g + 1, bound);
         if (t == FOUND) {
             return FOUND;
@@ -95,7 +96,7 @@ internal bool IDAStar(Cube root) {
         u8 t = Dfs(path, 0, bound);
         clock_gettime(CLOCK_MONOTONIC, &end);
         f64 elapsed = Timespec2Sec(&end) - Timespec2Sec(&start);
-        printf("T%0.3f B:%u N/s:%'lu N:%'lu\n", elapsed, bound,
+        printf("T%5.3f B:%02u N/s:%'lu N:%'lu\n", elapsed, bound,
                u64(nodes / elapsed), nodes);
         if (t == FOUND) {
             // print path

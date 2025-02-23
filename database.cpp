@@ -70,4 +70,19 @@ struct Database {
         i >>= 1;
         return (data[i] >> shift) & 0xf;
     }
+
+    f64 Mean() {
+        u64 sum = 0;
+        u64 n = hdr.size / sizeof(u64);
+        assert(hdr.num_entries % n == 0);
+        u64 *ptr = (u64*) data;
+        for (u64 i = 0; i < n; i++) {
+            u64 v = ptr[i];
+            while (v) {
+                sum += v & 0xf;
+                v >>= 4;
+            }
+        }
+        return sum / (f64)hdr.num_entries;
+    }
 };

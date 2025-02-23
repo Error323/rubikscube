@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 
 #include <cassert>
+#include <cerrno>
 #include <clocale>
 #include <csignal>
 #include <cstdio>
@@ -28,7 +29,7 @@ s32 main(s32 argc, char *argv[]) {
     if (argc > 1) {
         n = atoi(argv[1]);
     }
-    srand(1337);
+    srand(2);
 
     auto cornerpath = "data/corner.db";
     auto edge1path = "data/edge1.db";
@@ -39,8 +40,12 @@ s32 main(s32 argc, char *argv[]) {
     u64 psize = Factorial(12);
 
     if (access("data", R_OK | W_OK | X_OK) != 0) {
-        fprintf(stderr, "Directory 'data' must exist and be accessible\n");
-        return 1;
+        if (mkdir("data", 0775) != 0) {
+            perror("mkdir 'data'");
+            return 1;
+        } else {
+            printf("Created directory 'data'\n");
+        }
     }
 
     if (access(cornerpath, F_OK) == 0 && access(edge1path, F_OK) == 0 &&
@@ -71,8 +76,8 @@ s32 main(s32 argc, char *argv[]) {
         // solve the cube
         IDAStar(root);
     } else {
-        printf("2x 12P%d edge db size = %lluMiB\n", PICKED, esize / MiB(1) / 2);
         printf("8! * 3^7 corner db size = %lluMiB\n", csize / MiB(1) / 2);
+        printf("2x 12P%d edge db size = %lluMiB\n", PICKED, esize / MiB(1) / 2);
         printf("12! permutation db size = %lluMiB\n", psize / MiB(1) / 2);
 
         Database db[] = {cornerdb, edge1db, edge2db, permdb};
@@ -93,13 +98,7 @@ s32 main(s32 argc, char *argv[]) {
                 return 1;
             }
 
-            u64 sum = 0;
-            for (u32 j = 0; j < db[i].hdr.num_entries; j++) {
-                u8 v = db[i].Get(j);
-                sum += v;
-            }
-            printf("%s mean = %0.3f\n", names[i],
-                   sum / double(db[i].hdr.num_entries));
+            printf("%s mean = %0.3f\n", names[i], db[i].Mean());
             db[i].Write(paths[i]);
         }
     }
