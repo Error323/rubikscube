@@ -49,7 +49,7 @@ s32 main(s32 argc, char *argv[]) {
         }
     }
 
-    Database db[] = {cornerdb, edge1db, edge2db, permdb};
+    Database *db[] = {&cornerdb, &edge1db, &edge2db, &permdb};
     const char *names[] = {"corner", "edge1", "edge2", "permutation"};
     const char *paths[] = {cornerpath, edge1path, edge2path, permpath};
     const Database::Type types[] = { Database::CORNER, Database::EDGE1, Database::EDGE2, Database::PERMUTATION };
@@ -59,7 +59,7 @@ s32 main(s32 argc, char *argv[]) {
 
         for (s32 i = 0; i < 4; i++) {
             printf("Loading '%s'\n", names[i]);
-            if (!db[i].MemoryMapReadOnly(paths[i], types[i])) {
+            if (!db[i]->MemoryMapReadOnly(paths[i], types[i])) {
                 printf("invalid file\n");
                 return 1;
             }
@@ -92,16 +92,16 @@ s32 main(s32 argc, char *argv[]) {
 
         for (s32 i = 0; i < 4; i++) {
             printf("Generating '%s'\n", names[i]);
-            if (!db[i].MemoryMapReadWrite(paths[i], sz[i], types[i])) {
+            if (!db[i]->MemoryMapReadWrite(paths[i], sz[i], types[i])) {
                 return 1;
             }
 
-            if (!Bfs(db[i], indexer[i])) {
+            if (!Bfs(*db[i], indexer[i])) {
                 fprintf(stderr, "not enough memory\n");
                 return 1;
             }
 
-            printf("%s mean = %0.3f\n", names[i], db[i].Mean());
+            printf("%s mean = %0.3f\n", names[i], db[i]->Mean());
         }
     }
 

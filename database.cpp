@@ -76,8 +76,6 @@ struct Database {
         hdr = (Header*) map;
         data = (u8*) map + sizeof(Header);
 
-        printf("%x %d\n", hdr->magic, hdr->type);
-
         return hdr->magic == MAGIC && hdr->type == type;
     }
 
