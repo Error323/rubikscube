@@ -49,19 +49,25 @@ s32 main(s32 argc, char *argv[]) {
         }
     }
 
+    Database db[] = {cornerdb, edge1db, edge2db, permdb};
+    const char *names[] = {"corner", "edge1", "edge2", "permutation"};
+    const char *paths[] = {cornerpath, edge1path, edge2path, permpath};
+    const Database::Type types[] = { Database::CORNER, Database::EDGE1, Database::EDGE2, Database::PERMUTATION };
+
     if (access(cornerpath, F_OK) == 0 && access(edge1path, F_OK) == 0 &&
         access(edge2path, F_OK) == 0 && access(permpath, F_OK) == 0) {
+
+        for (s32 i = 0; i < 4; i++) {
+            printf("Loading '%s'\n", names[i]);
+            if (!db[i].MemoryMapReadOnly(paths[i], types[i])) {
+                printf("invalid file\n");
+                return 1;
+            }
+        }
+
         Cube root;
         Init(goal);
         Init(root);
-        bool loaded = true;
-        loaded &= edge1db.MemoryMapReadOnly(edge1path);
-        loaded &= edge2db.MemoryMapReadOnly(edge2path);
-        loaded &= cornerdb.MemoryMapReadOnly(cornerpath);
-        loaded &= permdb.MemoryMapReadOnly(permpath);
-        if (!loaded) {
-            return 1;
-        }
         // scramble the cube
         for (s32 i = 0; i < n; i++) {
             s32 move = rand() % 18;
@@ -77,11 +83,7 @@ s32 main(s32 argc, char *argv[]) {
         printf("2x 12P%d edge db size = %lluMiB\n", PICKED, esize / MiB(1) / 2);
         printf("12! permutation db size = %lluMiB\n", psize / MiB(1) / 2);
 
-        Database db[] = {cornerdb, edge1db, edge2db, permdb};
         u64 sz[] = {csize, esize, esize, psize};
-        const char *names[] = {"corner", "edge1", "edge2", "permutation"};
-        const char *paths[] = {cornerpath, edge1path, edge2path, permpath};
-        const Database::Type types[] = { Database::CORNER, Database::EDGE1, Database::EDGE2, Database::PERMUTATION };
         Indexer indexer[] = {
             [](Cube &c) { return CornerIndex(c); },
             [](Cube &c) { return EdgeIndex<PICKED>(c, 0); },

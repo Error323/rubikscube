@@ -36,7 +36,7 @@ struct Database {
 
         // Create the virtual memory space
         map = (char *)mmap(NULL, size, PROT_READ | PROT_WRITE,
-                               MAP_PRIVATE, fd, 0);
+                               MAP_SHARED, fd, 0);
         if (map == MAP_FAILED) {
             perror("mmap");
             return false;
@@ -53,7 +53,7 @@ struct Database {
         return true;
     }
 
-    bool MemoryMapReadOnly(const char *path) {
+    bool MemoryMapReadOnly(const char *path, Type type) {
         int fd = open(path, O_RDONLY);
         if (fd == -1) {
             perror("open");
@@ -76,7 +76,9 @@ struct Database {
         hdr = (Header*) map;
         data = (u8*) map + sizeof(Header);
 
-        return hdr->magic == MAGIC && hdr->size == hdr->num_entries >> 1;
+        printf("%x %d\n", hdr->magic, hdr->type);
+
+        return hdr->magic == MAGIC && hdr->type == type;
     }
 
     bool Update(u64 i, u8 depth) {
