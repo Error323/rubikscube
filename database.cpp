@@ -67,7 +67,7 @@ struct Database {
             return false;
         }
 
-        map = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+        map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
         if (map == MAP_FAILED) {
             perror("mmap");
             return false;
