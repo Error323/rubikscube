@@ -1,56 +1,86 @@
 #define MAGIC 0xfeffc2f9
 
 struct Database {
-    enum Type { CORNER, EDGE1, EDGE2, PERMUTATION };
+    enum Type { INVALID, CORNER, EDGE1, EDGE2, PERMUTATION };
     struct Header {
         u32 magic{MAGIC};
-        Type type{CORNER};
+        Type type{INVALID};
         u64 num_entries{0};
         u64 size{0};
     };
 
-    Header hdr;
+    Header *hdr{nullptr};
     u8 *data{nullptr};
+    void *map{nullptr};
 
-    void Init(u64 n, Type type) {
-        assert(data == nullptr);
-        hdr.type = type;
-        hdr.num_entries = n;
-        hdr.size = n >> 1;
-        data = new u8[hdr.size];
-        assert(data != nullptr);
-        memset(data, 0xff, hdr.size);
-    }
+    bool MemoryMapReadWrite(const char *path, u64 n, Type type) {
+        s32 fd = -1;
+        if (access(path, R_OK | W_OK) != 0) {
+            fd = creat(path, 0666);
+            close(fd);
+        }
 
-    bool Load(const char *path) {
-        Header hdr_{0};
-        FILE *file;
-        file = fopen(path, "rb");
-        bool valid = true;
-        valid &= fread(&hdr_, sizeof(hdr_), 1, file) != 0;
-        valid &= (hdr_.magic == MAGIC);
-        valid &= (hdr_.type == hdr.type);
-        valid &= (hdr_.size == hdr.size);
-        valid &= (hdr_.num_entries == hdr.num_entries);
-        if (!valid) {
-            fprintf(stderr, "Invalid database file: '%s'\n", path);
+        fd = open(path, O_RDWR);
+
+        if (fd == -1) {
+            perror("open");
             return false;
         }
-        fread(data, 1, hdr_.size, file);
-        fclose(file);
+
+        // allocate virtual memory on disk
+        u64 size = sizeof(Header) + n / 2;
+        if (ftruncate(fd, size) == -1) {
+            perror("ftrucate");
+            return false;
+        }
+
+        // Create the virtual memory space
+        map = (char *)mmap(NULL, size, PROT_READ | PROT_WRITE,
+                               MAP_PRIVATE, fd, 0);
+        if (map == MAP_FAILED) {
+            perror("mmap");
+            return false;
+        }
+        hdr = (Header*) map;
+        data = (u8*) map + sizeof(Header);
+
+        hdr->magic = MAGIC;
+        hdr->type = type;
+        hdr->num_entries = n;
+        hdr->size = n >> 1;
+        memset(data, 0xff, hdr->size);
+
         return true;
     }
 
-    void Write(const char *path) {
-        FILE *file;
-        file = fopen(path, "wb");
-        fwrite(&hdr, sizeof(hdr), 1, file);
-        fwrite(data, 1, hdr.size, file);
-        fclose(file);
+    bool MemoryMapReadOnly(const char *path) {
+        int fd = open(path, O_RDONLY);
+        if (fd == -1) {
+            perror("open");
+            return false;
+        }
+
+        struct stat st;
+        if (fstat(fd, &st) == -1) {
+            perror("fstat");
+            close(fd);
+            return false;
+        }
+
+        map = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+        if (map == MAP_FAILED) {
+            perror("mmap");
+            return false;
+        }
+
+        hdr = (Header*) map;
+        data = (u8*) map + sizeof(Header);
+
+        return hdr->magic == MAGIC && hdr->size == hdr->num_entries >> 1;
     }
 
     bool Update(u64 i, u8 depth) {
-        assert(i < hdr.num_entries);
+        assert(i < hdr->num_entries);
         u8 shift = i & 1;
         shift *= 4;
         i >>= 1;
@@ -64,7 +94,7 @@ struct Database {
     }
 
     u8 Get(u64 i) {
-        assert(i < hdr.num_entries);
+        assert(i < hdr->num_entries);
         u8 shift = i & 1;
         shift *= 4;
         i >>= 1;
@@ -73,8 +103,8 @@ struct Database {
 
     f64 Mean() {
         u64 sum = 0;
-        u64 n = hdr.size / sizeof(u64);
-        assert(hdr.num_entries % n == 0);
+        u64 n = hdr->size / sizeof(u64);
+        assert(hdr->num_entries % n == 0);
         u64 *ptr = (u64*) data;
         for (u64 i = 0; i < n; i++) {
             u64 v = ptr[i];
@@ -83,6 +113,6 @@ struct Database {
                 v >>= 4;
             }
         }
-        return sum / (f64)hdr.num_entries;
+        return sum / (f64)hdr->num_entries;
     }
 };

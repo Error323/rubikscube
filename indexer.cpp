@@ -1,4 +1,4 @@
-/// This work is taken from Bejamin Botto's work on database indexing at:
+/// This work is taken from Benjamin Botto's work on database indexing at:
 /// https://medium.com/@benjamin.botto/sequentially-indexing-permutations-a-linear-algorithm-for-computing-lexicographic-rank-a22220ffd6e3
 /// and adapted to suit our needs
 u64 Factorial(s32 n) {

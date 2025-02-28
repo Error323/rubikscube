@@ -7,7 +7,7 @@ using Indexer = u64 (*)(Cube &c);
 
 internal bool Bfs(Database &db, Indexer indexer) {
     timespec start, end;
-    Deque<Cube> q(db.hdr.num_entries * 0.6);
+    Deque<Cube> q(db.hdr->num_entries * 0.6);
     Cube root;
     Init(root);
     q.Push(root);
@@ -24,7 +24,7 @@ internal bool Bfs(Database &db, Indexer indexer) {
             Cube &cube = q.Pop();
             u32 valid = kValidMoves[cube.GetLastMoveIndex()];
             while (valid) {
-                if (q.Size() == db.hdr.num_entries) {
+                if (q.Size() == db.hdr->num_entries) {
                     return false;
                 }
                 s32 move = __builtin_ffs(valid) - 1;
@@ -43,7 +43,7 @@ internal bool Bfs(Database &db, Indexer indexer) {
         double elapsed = Timespec2Sec(&end) - Timespec2Sec(&start);
         printf(
             "Depth:%02lu MiB:%04lu Time:%0.3f Todo:%'lu Nodes:%'lu Nps:%'0lu\n",
-            depth, q.Size() * sizeof(Cube) / u32(MiB(1)), elapsed, db.hdr.num_entries - nodes, nodes,
+            depth, q.Size() * sizeof(Cube) / u32(MiB(1)), elapsed, db.hdr->num_entries - nodes, nodes,
             u64(size / elapsed));
     }
     return true;

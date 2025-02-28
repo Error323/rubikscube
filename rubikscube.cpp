@@ -11,7 +11,7 @@
 #include <cstring>
 #include <ctime>
 
-#define PICKED 8
+#define PICKED 6
 
 // clang-format off
 #include "utils.cpp"
@@ -54,15 +54,11 @@ s32 main(s32 argc, char *argv[]) {
         Cube root;
         Init(goal);
         Init(root);
-        edge1db.Init(esize, Database::EDGE1);
-        edge2db.Init(esize, Database::EDGE2);
-        cornerdb.Init(csize, Database::CORNER);
-        permdb.Init(psize, Database::PERMUTATION);
         bool loaded = true;
-        loaded &= edge1db.Load(edge1path);
-        loaded &= edge2db.Load(edge2path);
-        loaded &= cornerdb.Load(cornerpath);
-        loaded &= permdb.Load(permpath);
+        loaded &= edge1db.MemoryMapReadOnly(edge1path);
+        loaded &= edge2db.MemoryMapReadOnly(edge2path);
+        loaded &= cornerdb.MemoryMapReadOnly(cornerpath);
+        loaded &= permdb.MemoryMapReadOnly(permpath);
         if (!loaded) {
             return 1;
         }
@@ -85,6 +81,7 @@ s32 main(s32 argc, char *argv[]) {
         u64 sz[] = {csize, esize, esize, psize};
         const char *names[] = {"corner", "edge1", "edge2", "permutation"};
         const char *paths[] = {cornerpath, edge1path, edge2path, permpath};
+        const Database::Type types[] = { Database::CORNER, Database::EDGE1, Database::EDGE2, Database::PERMUTATION };
         Indexer indexer[] = {
             [](Cube &c) { return CornerIndex(c); },
             [](Cube &c) { return EdgeIndex<PICKED>(c, 0); },
@@ -93,14 +90,16 @@ s32 main(s32 argc, char *argv[]) {
 
         for (s32 i = 0; i < 4; i++) {
             printf("Generating '%s'\n", names[i]);
-            db[i].Init(sz[i], Database::Type(i));
+            if (!db[i].MemoryMapReadWrite(paths[i], sz[i], types[i])) {
+                return 1;
+            }
+
             if (!Bfs(db[i], indexer[i])) {
                 fprintf(stderr, "not enough memory\n");
                 return 1;
             }
 
             printf("%s mean = %0.3f\n", names[i], db[i].Mean());
-            db[i].Write(paths[i]);
         }
     }
 
