@@ -13,6 +13,31 @@ struct Database {
     u8 *data{nullptr};
     void *map{nullptr};
 
+    void Write(const char *path) {
+        FILE *file;
+        file = fopen(path, "wb");
+        fwrite(map, 1, hdr->size + sizeof(Header), file);
+        fclose(file);
+        free(map);
+    }
+
+    bool Alloc(u64 n, Type type) {
+        u64 size = n >> 1;
+        map = malloc(size + sizeof(Header));
+        if (map == NULL) {
+            printf("could not allocate memory\n");
+            return false;
+        }
+        hdr = (Header*)map;
+        data = (u8*) map + sizeof(Header);
+        hdr->num_entries = n;
+        hdr->magic = MAGIC;
+        hdr->size = size;
+        hdr->type = type;
+        memset(data, 0xff, size);
+        return true;
+    }
+
     bool MemoryMapReadWrite(const char *path, u64 n, Type type) {
         s32 fd = -1;
         if (access(path, R_OK | W_OK) != 0) {

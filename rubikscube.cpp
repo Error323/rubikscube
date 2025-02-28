@@ -92,7 +92,7 @@ s32 main(s32 argc, char *argv[]) {
 
         for (s32 i = 0; i < 4; i++) {
             printf("Generating '%s'\n", names[i]);
-            if (!db[i]->MemoryMapReadWrite(paths[i], sz[i], types[i])) {
+            if (!db[i]->Alloc(sz[i], types[i])) {
                 return 1;
             }
 
@@ -102,6 +102,7 @@ s32 main(s32 argc, char *argv[]) {
             }
 
             printf("%s mean = %0.3f\n", names[i], db[i]->Mean());
+            db[i]->Write(paths[i]);
         }
     }
 
